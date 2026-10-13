@@ -2,6 +2,7 @@
 	import { tick } from 'svelte';
 	import { createItem, type Item, type ListField } from '$lib/core/schema';
 	import type { Decision } from '$lib/core/types';
+	import Icon from '../Icon.svelte';
 	import Fields from './Fields.svelte';
 
 	interface Props {
@@ -25,7 +26,7 @@
 		items.push(item);
 		changed();
 		await tick();
-		root.querySelector<HTMLElement>(`[data-item="${item.id}"] :is(input, textarea)`)?.focus();
+		root.querySelector<HTMLElement>(`[data-item="${item.id}"] :is(input, textarea, select)`)?.focus();
 	}
 
 	function remove(index: number) {
@@ -36,83 +37,114 @@
 </script>
 
 <fieldset class="list" bind:this={root}>
-	<legend>{field.label}</legend>
-	{#if field.help}<p class="help">{field.help}</p>{/if}
+	<legend class="ss-label">{field.label}</legend>
+	{#if field.help}<p class="ss-hint">{field.help}</p>{/if}
 	{#if items.length}
 		<ol>
 			{#each items as item, i (item.id)}
 				<li data-item={item.id}>
-					<div class="head">
-						<span class="title">{field.itemTitle ? field.itemTitle(item, i, decision) : `${field.itemLabel} ${i + 1}`}</span>
-						<button type="button" class="remove ghost" aria-label="Remove {noun} {i + 1}" onclick={() => remove(i)}>
-							<span aria-hidden="true">×</span>
-						</button>
+					<span class="n ss-figure" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+					<div class="body">
+						<div class="head">
+							{#if field.itemTitle}
+								<p class="title">{field.itemTitle(item, i, decision)}</p>
+							{:else}
+								<p class="title sr-only">{field.itemLabel} {i + 1}</p>
+							{/if}
+							<button type="button" class="ss-btn ghost icon small remove" aria-label="Remove {noun} {i + 1}" onclick={() => remove(i)}>
+								<Icon name="close" />
+							</button>
+						</div>
+						<Fields fields={field.fields} bind:value={items[i]!} {decision} idPrefix={`${idPrefix}-${item.id}`} inline={field.inline} />
 					</div>
-					<Fields fields={field.fields} bind:value={items[i]!} {decision} idPrefix={`${idPrefix}-${item.id}`} inline={field.inline} />
 				</li>
 			{/each}
 		</ol>
 	{/if}
-	<button type="button" class="add" onclick={add} disabled={atMax}>
-		+ {field.addLabel ?? `Add ${noun}`}
+	<button type="button" class="ss-btn small add" onclick={add} disabled={atMax}>
+		<Icon name="plus" />
+		{field.addLabel ?? `Add ${noun}`}
 	</button>
 </fieldset>
 
 <style>
 	.list {
 		display: grid;
-		gap: 0.5rem;
+		gap: var(--ss-space-3);
+		min-width: 0;
+		margin: 0;
+		padding: 0;
+		border: 0;
 	}
 
 	legend {
-		font-weight: 650;
-		margin-bottom: 0.25rem;
-	}
-
-	.help {
-		font-size: 0.85rem;
-		color: var(--muted);
+		padding: 0;
+		margin-bottom: var(--ss-space-2);
 	}
 
 	ol {
-		list-style: none;
+		display: grid;
 		margin: 0;
 		padding: 0;
-		display: grid;
-		gap: 0.5rem;
+		list-style: none;
 	}
 
 	li {
-		padding: 0.6rem 0.75rem 0.75rem;
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
-		background: var(--surface-2);
+		display: grid;
+		grid-template-columns: 1.75rem minmax(0, 1fr);
+		padding-block: var(--ss-space-3) var(--ss-space-4);
+		border-top: var(--ss-hairline) solid var(--ss-ui);
+	}
+
+	li:last-child {
+		border-bottom: var(--ss-hairline) solid var(--ss-ui);
+	}
+
+	.n {
+		padding-top: 0.45rem;
+		color: var(--ss-tx-2);
+		font-size: var(--ss-text-xs);
+	}
+
+	.body {
+		display: grid;
+		gap: var(--ss-space-1);
+		min-width: 0;
 	}
 
 	.head {
 		display: flex;
-		align-items: center;
+		align-items: start;
 		justify-content: space-between;
-		gap: 0.5rem;
-		margin-bottom: 0.35rem;
+		gap: var(--ss-space-2);
+		min-height: 24px;
 	}
 
 	.title {
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: var(--muted);
+		margin: 0;
+		padding-top: 0.2rem;
+		color: var(--ss-tx-2);
+		font-size: var(--ss-text-sm);
 	}
 
 	.remove {
-		min-width: 2.5rem;
-		font-size: 1.25rem;
-		padding: 0 0.5rem;
+		margin-left: auto;
+		color: var(--ss-icon);
+		transition: color var(--ss-dur-hover) var(--ss-ease-hover);
+	}
+
+	@media (hover: hover) {
+		.remove:hover {
+			color: var(--ss-danger);
+		}
+	}
+
+	.remove:active {
+		color: var(--ss-danger);
+		transition-duration: 0s;
 	}
 
 	.add {
 		justify-self: start;
-		border-style: dashed;
-		color: var(--accent);
-		font-weight: 600;
 	}
 </style>

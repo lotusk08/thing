@@ -1,10 +1,17 @@
 <script lang="ts">
 	import type { AnyModel } from '$lib/core/model';
+	import type { Confidence } from '$lib/core/types';
 	import { store } from '$lib/state.svelte';
 	import Fields from './fields/Fields.svelte';
+	import { noteIcons } from '$lib/icons';
+	import Icon from './Icon.svelte';
 
 	let { model }: { model: AnyModel } = $props();
 
+	/** Status uses SS's note families. */
+	const NOTE = { high: 'tip', medium: 'info', low: 'warning' } as const satisfies Record<Confidence, string>;
+
+	const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 	const estimate = $derived(store.estimates[model.id]);
 	const touch = () => store.touch(model.id);
 
@@ -13,36 +20,44 @@
 	}
 </script>
 
-<div id="panel-{model.id}" class="panel" role="tabpanel" aria-labelledby="tab-{model.id}" tabindex="-1">
-	<div class="intro">
-		<h2>{model.name}</h2>
-		<p>{model.description}</p>
-	</div>
+<div
+	id="panel-{model.id}"
+	class="panel"
+	role="tabpanel"
+	aria-labelledby="panel-title-{model.id}"
+	tabindex="-1"
+>
+	<header class="intro">
+		<h2 id="panel-title-{model.id}" class="ss-heading">{model.name}</h2>
+		<p class="ss-measure">{model.description}</p>
+	</header>
 
-	<p class="estimate" class:empty={!estimate}>
-		{#if estimate}
-			<span class="badge" data-level={estimate.confidence}>{estimate.confidence}</span>
-			{estimate.summary}
-		{:else}
-			No estimate yet — fill in the inputs below.
-		{/if}
-	</p>
+	{#if estimate}
+		<div class="ss-note {NOTE[estimate.confidence]} estimate">
+			<p><span class="confidence">{cap(estimate.confidence)} confidence.</span> {estimate.summary}</p>
+			{@html noteIcons[NOTE[estimate.confidence]]}
+		</div>
+	{:else}
+		<p class="estimate empty">No estimate yet. Fill in the inputs below.</p>
+	{/if}
 
 	<form oninput={touch} onchange={touch} onsubmit={(e) => e.preventDefault()}>
 		<Fields fields={model.inputsSchema} bind:value={store.inputs[model.id]!} decision={store.decision} idPrefix={model.id} />
 	</form>
 
 	<div class="actions">
-		<button type="button" class="ghost" onclick={reset}>Reset {model.short}</button>
+		<button type="button" class="ss-btn ghost small" onclick={reset}>
+			<Icon name="refresh" /> Reset {model.short}
+		</button>
 	</div>
 </div>
 
 <style>
 	.panel {
 		display: grid;
-		gap: 1rem;
-		padding-block: 1rem 2rem;
-		scroll-margin-top: 1rem;
+		gap: var(--ss-space-6);
+		padding-block: var(--ss-space-6) var(--ss-section-s);
+		scroll-margin-top: var(--ss-space-4);
 	}
 
 	.panel:focus {
@@ -51,54 +66,37 @@
 
 	.intro {
 		display: grid;
-		gap: 0.25rem;
+		gap: var(--ss-space-2);
 	}
 
 	h2 {
-		font-size: 1.25rem;
+		margin: 0;
+		font-size: var(--ss-display-3);
+		text-wrap: balance;
 	}
 
 	.intro p {
-		color: var(--muted);
-		max-width: 65ch;
+		margin: 0;
+		color: var(--ss-tx-2);
 	}
 
 	.estimate {
-		padding: 0.65rem 0.8rem;
-		border-radius: var(--radius);
-		background: var(--accent-soft);
-		font-weight: 500;
+		margin: 0;
 	}
 
-	.estimate.empty {
-		background: var(--surface-2);
-		color: var(--muted);
-		font-weight: 400;
+	.estimate p {
+		margin: 0;
 	}
 
-	.badge {
-		display: inline-block;
-		margin-right: 0.35rem;
-		padding: 0 0.5rem;
-		border-radius: 999px;
-		font-size: 0.75rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.03em;
-		border: 1px solid currentColor;
-		vertical-align: 0.1em;
+	.confidence {
+		color: var(--ss-tx);
+		font-weight: 600;
 	}
 
-	.badge[data-level='high'] {
-		color: var(--good);
-	}
-
-	.badge[data-level='medium'] {
-		color: var(--warn);
-	}
-
-	.badge[data-level='low'] {
-		color: var(--bad);
+	.empty {
+		padding: 0.8em 1.2em 0.8em 0.8em;
+		border-left: 0.2em solid var(--ss-ui);
+		color: var(--ss-tx-2);
 	}
 
 	.actions {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { store } from '$lib/state.svelte';
+	import Icon from './Icon.svelte';
 
 	let chips: HTMLElement;
 
@@ -10,30 +11,44 @@
 		if (id) chips.querySelector<HTMLInputElement>(`[data-option="${id}"]`)?.focus();
 	}
 
-	function startOver() {
-		if (confirm('Start a new decision? This clears the title, options and every model.')) store.startOver();
+	/** Grow the title with its text (it wraps at display size on phones). */
+	function autosize(node: HTMLTextAreaElement, _value: string) {
+		const fit = () => {
+			node.style.height = 'auto';
+			node.style.height = `${node.scrollHeight}px`;
+		};
+		requestAnimationFrame(fit);
+		window.addEventListener('resize', fit);
+		return {
+			update: fit,
+			destroy: () => window.removeEventListener('resize', fit)
+		};
+	}
+
+	function oneLine(e: Event & { currentTarget: HTMLTextAreaElement }) {
+		const v = e.currentTarget.value;
+		if (v.includes('\n')) store.decision.title = v.replace(/\s*\n\s*/g, ' ');
 	}
 </script>
 
-<header class="header">
-	<div class="top">
-		<h1>Decision Tools</h1>
-		<button type="button" class="ghost" onclick={startOver}>New decision</button>
-	</div>
-
+<section class="decision ss-enter" aria-label="Decision">
 	<label for="decision-title" class="sr-only">Decision</label>
-	<input
+	<textarea
 		id="decision-title"
 		class="title"
-		type="text"
+		rows="1"
 		placeholder="What are you deciding?"
 		autocomplete="off"
+		spellcheck="true"
 		bind:value={store.decision.title}
-	/>
+		use:autosize={store.decision.title}
+		oninput={oneLine}
+		onkeydown={(e) => e.key === 'Enter' && e.preventDefault()}
+	></textarea>
 
-	<div class="chips" role="group" aria-label="Options" bind:this={chips}>
+	<div class="options" role="group" aria-label="Options" bind:this={chips}>
 		{#each store.decision.options as option, i (option.id)}
-			<span class="chip">
+			<span class="ss-chip option">
 				<input
 					type="text"
 					aria-label="Option {i + 1}"
@@ -45,116 +60,174 @@
 				/>
 				<button
 					type="button"
-					class="remove"
+					class="ss-btn ghost icon small remove"
 					aria-label="Remove option {option.label.trim() || i + 1}"
 					disabled={!store.canRemoveOption}
 					onclick={() => store.removeOption(option.id)}
 				>
-					<span aria-hidden="true">×</span>
+					<Icon name="close" />
 				</button>
 			</span>
 		{/each}
-		<button type="button" class="add" onclick={addOption} disabled={!store.canAddOption}>+ Option</button>
+		<button type="button" class="ss-btn small add-option" onclick={addOption} disabled={!store.canAddOption}>
+			<Icon name="plus" /> Option
+		</button>
 	</div>
 
 	<details class="notes" open={!!store.decision.notes}>
-		<summary>Notes</summary>
+		<summary><Icon name="chevron-right" /> Notes</summary>
 		<label for="decision-notes" class="sr-only">Notes</label>
-		<textarea id="decision-notes" rows="3" placeholder="Context, constraints, deadline…" bind:value={store.decision.notes}></textarea>
+		<textarea id="decision-notes" class="ss-input" rows="3" placeholder="Context, constraints, deadline…" bind:value={store.decision.notes}></textarea>
 	</details>
-</header>
+</section>
 
 <style>
-	.header {
+	.decision {
 		display: grid;
-		gap: 0.75rem;
-	}
-
-	.top {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	h1 {
-		font-size: 0.95rem;
-		font-weight: 700;
-		letter-spacing: 0.02em;
-		text-transform: uppercase;
-		color: var(--muted);
+		gap: var(--ss-space-5);
+		padding-block: var(--ss-space-8) var(--ss-space-6);
 	}
 
 	.title {
-		font-size: 1.5rem;
-		font-weight: 700;
-		padding: 0.5rem 0.75rem;
-		background: var(--surface);
-	}
-
-	.chips {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-	}
-
-	.chip {
-		display: inline-flex;
-		align-items: center;
-		border: 1px solid var(--border);
-		border-radius: 999px;
-		background: var(--surface);
-		padding-left: 0.25rem;
-		max-width: 100%;
-	}
-
-	.chip:focus-within {
-		border-color: var(--accent);
-	}
-
-	.chip input {
+		display: block;
+		width: 100%;
+		margin: 0;
+		padding: 0 0 0.15em;
+		overflow: hidden;
 		border: 0;
+		border-bottom: var(--ss-hairline) solid transparent;
+		border-radius: 0;
 		background: transparent;
-		width: auto;
-		min-width: 6ch;
-		max-width: 100%;
-		padding: 0.4rem 0.5rem;
-		border-radius: 999px;
-		font-weight: 600;
+		color: var(--ss-tx);
+		font-family: var(--ss-font-title);
+		font-size: var(--ss-display-1);
+		font-style: italic;
+		font-weight: 400;
+		line-height: 1.15;
+		letter-spacing: var(--ss-tracking-display);
+		text-wrap: balance;
+		resize: none;
+		transition: border-color var(--ss-dur-hover) var(--ss-ease-hover);
 	}
 
-	@supports (field-sizing: content) {
-		.chip input {
-			field-sizing: content;
-			min-width: 8ch;
-			max-width: 32ch;
+	.title::placeholder {
+		color: var(--ss-tx-3);
+	}
+
+	@media (hover: hover) {
+		.title:hover {
+			border-bottom-color: var(--ss-ui-2);
 		}
 	}
 
-	.chip .remove {
-		border: 0;
-		background: transparent;
-		border-radius: 999px;
-		min-width: 2.5rem;
-		font-size: 1.15rem;
-		color: var(--muted);
+	.title:focus {
+		border-bottom-color: var(--ss-accent);
+		outline: none;
 	}
 
-	.add {
-		border-radius: 999px;
-		border-style: dashed;
-		color: var(--accent);
-		font-weight: 600;
+	.options {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--ss-space-2);
+	}
+
+	.option {
+		gap: 0;
+		max-width: 100%;
+		padding: 0 2px 0 var(--ss-space-3);
+		color: var(--ss-tx);
+		font-size: var(--ss-text-base);
+		transition:
+			border-color var(--ss-dur-hover) var(--ss-ease-hover),
+			box-shadow var(--ss-dur-hover) var(--ss-ease-hover);
+	}
+
+	.option:focus-within {
+		border-color: var(--ss-accent);
+		box-shadow: 0 0 0 3px var(--ss-ring);
+	}
+
+	.option input {
+		width: auto;
+		min-width: 6ch;
+		max-width: 100%;
+		padding: 0.3rem 0;
+		border: 0;
+		background: transparent;
+		font-weight: 500;
+	}
+
+	.option input::placeholder {
+		color: var(--ss-tx-3);
+	}
+
+	.option input:focus {
+		outline: none;
+	}
+
+	@supports (field-sizing: content) {
+		.option input {
+			field-sizing: content;
+			min-width: 6ch;
+			max-width: 30ch;
+		}
+	}
+
+	.remove {
+		border-radius: var(--ss-radius-full);
+		color: var(--ss-icon);
+		transition: color var(--ss-dur-hover) var(--ss-ease-hover);
+	}
+
+	@media (hover: hover) {
+		.remove:hover:not(:disabled) {
+			color: var(--ss-danger);
+		}
+	}
+
+	.remove:active:not(:disabled) {
+		color: var(--ss-danger);
+		transition-duration: 0s;
+	}
+
+	.add-option {
+		border-radius: var(--ss-radius-full);
 	}
 
 	.notes summary {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--ss-space-1);
+		color: var(--ss-tx-2);
+		font-size: var(--ss-text-sm);
+		list-style: none;
 		cursor: pointer;
-		color: var(--muted);
-		font-size: 0.9rem;
-		width: fit-content;
-		padding: 0.25rem 0;
+		transition: color var(--ss-dur-hover) var(--ss-ease-hover);
+	}
+
+	.notes summary::-webkit-details-marker {
+		display: none;
+	}
+
+	@media (hover: hover) {
+		.notes summary:hover {
+			color: var(--ss-tx);
+		}
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.notes summary :global(.ss-icon) {
+			transition: transform var(--ss-dur-small) var(--ss-ease-out);
+		}
+	}
+
+	.notes[open] summary :global(.ss-icon) {
+		transform: rotate(90deg);
 	}
 
 	.notes textarea {
-		margin-top: 0.35rem;
+		margin-top: var(--ss-space-2);
+		min-height: 4.5rem;
 	}
 </style>

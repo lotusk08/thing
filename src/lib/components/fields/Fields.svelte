@@ -1,6 +1,8 @@
 <!--
 	Generic renderer for any model's inputsSchema. Recursive for group / perOption / list.
 	`value` is bound to the store's deep $state, so edits flow straight back.
+	Styled with SS: .ss-field labels, .ss-input underlines, .ss-segment / select for choices
+	(a segment up to three states, a menu past that), .ss-check boxes, hairlines over cards.
 -->
 <script lang="ts">
 	import { choicesOf, type Fields } from '$lib/core/schema';
@@ -23,6 +25,7 @@
 
 	let { fields, value = $bindable(), decision, idPrefix, inline = false }: Props = $props();
 
+	const SEGMENT_MAX = 3;
 	const show = (n: number, signed = false) => (signed && n > 0 ? `+${n}` : String(n));
 </script>
 
@@ -31,10 +34,10 @@
 		{@const id = `${idPrefix}-${f.key}`}
 		{@const helpId = 'help' in f && f.help ? `${id}-help` : undefined}
 		{#if f.kind === 'number'}
-			<div class="field number">
+			<div class="ss-field number">
 				<div class="label-row">
 					<label for={id}>{f.label}</label>
-					<output for={id}>{show(value[f.key], f.signed)}</output>
+					<output class="ss-figure" for={id}>{show(value[f.key], f.signed)}</output>
 				</div>
 				<input
 					type="range"
@@ -49,60 +52,76 @@
 				{#if f.ends && !inline}
 					<div class="ends" aria-hidden="true"><span>{f.ends[0]}</span><span>{f.ends[1]}</span></div>
 				{/if}
-				{#if f.help}<p class="help" id={helpId}>{f.help}</p>{/if}
+				{#if f.help}<p class="ss-hint" id={helpId}>{f.help}</p>{/if}
 			</div>
 		{:else if f.kind === 'text'}
-			<div class="field text">
+			<div class="ss-field text">
 				<label for={id} class:sr-only={inline}>{f.label}</label>
 				{#if f.multiline}
-					<textarea {id} rows="2" placeholder={f.placeholder} bind:value={value[f.key]} aria-describedby={helpId}></textarea>
+					<textarea class="ss-input" {id} rows="2" placeholder={f.placeholder} bind:value={value[f.key]} aria-describedby={helpId}></textarea>
 				{:else}
 					<input
+						class="ss-input"
 						type="text"
 						{id}
 						placeholder={f.placeholder ?? (inline ? f.label : undefined)}
+						autocomplete="off"
 						bind:value={value[f.key]}
 						aria-describedby={helpId}
 					/>
 				{/if}
-				{#if f.help}<p class="help" id={helpId}>{f.help}</p>{/if}
+				{#if f.help}<p class="ss-hint" id={helpId}>{f.help}</p>{/if}
 			</div>
 		{:else if f.kind === 'choice'}
-			<fieldset class="field choice" aria-describedby={helpId}>
-				<legend>{f.label}</legend>
-				<div class="segmented">
-					{#each choicesOf(f, decision) as c (c.value)}
-						<label>
-							<input type="radio" name={id} value={c.value} bind:group={value[f.key]} />
-							<span>{c.label}</span>
-						</label>
-					{/each}
+			{@const choices = choicesOf(f, decision)}
+			{#if choices.length <= SEGMENT_MAX}
+				<fieldset class="ss-field choice" aria-describedby={helpId}>
+					<legend>{f.label}</legend>
+					<div class="ss-segment segment">
+						{#each choices as c (c.value)}
+							<label>
+								<input type="radio" name={id} value={c.value} bind:group={value[f.key]} />
+								<span>{c.label}</span>
+							</label>
+						{/each}
+					</div>
+					{#if f.help}<p class="ss-hint" id={helpId}>{f.help}</p>{/if}
+				</fieldset>
+			{:else}
+				<div class="ss-field">
+					<label for={id}>{f.label}</label>
+					<select class="ss-input" {id} bind:value={value[f.key]} aria-describedby={helpId}>
+						{#if f.default === ''}<option value="">Choose…</option>{/if}
+						{#each choices as c (c.value)}
+							<option value={c.value}>{c.label}</option>
+						{/each}
+					</select>
+					{#if f.help}<p class="ss-hint" id={helpId}>{f.help}</p>{/if}
 				</div>
-				{#if f.help}<p class="help" id={helpId}>{f.help}</p>{/if}
-			</fieldset>
+			{/if}
 		{:else if f.kind === 'optionSet'}
-			<fieldset class="field choice" aria-describedby={helpId}>
+			<fieldset class="ss-field" aria-describedby={helpId}>
 				<legend>{f.label}</legend>
-				<div class="segmented">
+				<div class="checks">
 					{#each decision.options as o (o.id)}
-						<label>
+						<label class="ss-check">
 							<input type="checkbox" value={o.id} bind:group={value[f.key]} />
 							<span>{optionLabel(decision, o.id)}</span>
 						</label>
 					{/each}
 				</div>
-				{#if f.help}<p class="help" id={helpId}>{f.help}</p>{/if}
+				{#if f.help}<p class="ss-hint" id={helpId}>{f.help}</p>{/if}
 			</fieldset>
 		{:else if f.kind === 'group'}
-			<fieldset class="field group" aria-describedby={helpId}>
-				<legend>{f.label}</legend>
-				{#if f.help}<p class="help" id={helpId}>{f.help}</p>{/if}
+			<fieldset class="group" aria-describedby={helpId}>
+				<legend class="ss-label">{f.label}</legend>
+				{#if f.help}<p class="ss-hint" id={helpId}>{f.help}</p>{/if}
 				<Self fields={f.fields} bind:value={value[f.key]} {decision} idPrefix={id} />
 			</fieldset>
 		{:else if f.kind === 'perOption'}
 			<div class="per-option">
 				{#each decision.options as o (o.id)}
-					<fieldset class="card">
+					<fieldset class="option">
 						<legend>{optionLabel(decision, o.id)}</legend>
 						<Self fields={f.fields} bind:value={value[f.key][o.id]} {decision} idPrefix={`${id}-${o.id}`} />
 					</fieldset>
@@ -115,16 +134,27 @@
 </div>
 
 <style>
+	fieldset {
+		min-width: 0;
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+
+	legend {
+		padding: 0;
+	}
+
 	.fields {
 		display: grid;
-		gap: 1rem;
+		gap: var(--ss-space-5);
 	}
 
 	.fields.inline {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: end;
-		gap: 0.5rem 0.75rem;
+		gap: var(--ss-space-2) var(--ss-space-5);
 	}
 
 	.inline > .text {
@@ -139,130 +169,129 @@
 		flex: 1 1 100%;
 	}
 
-	.field {
-		display: grid;
-		gap: 0.25rem;
-	}
-
 	.label-row {
 		display: flex;
-		justify-content: space-between;
-		gap: 0.5rem;
 		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--ss-space-2);
 	}
 
-	label,
-	legend {
-		font-weight: 550;
-		font-size: 0.95rem;
-	}
-
-	.inline label,
-	.inline legend {
-		font-size: 0.85rem;
+	.label-row label,
+	.ss-field > legend {
+		color: var(--ss-tx-2);
+		font-size: var(--ss-text-xs);
 		font-weight: 500;
-		color: var(--muted);
+	}
+
+	.ss-field > legend {
+		margin-bottom: 6px;
 	}
 
 	output {
-		font-variant-numeric: tabular-nums;
-		font-weight: 650;
 		min-width: 2ch;
+		color: var(--ss-tx);
+		font-size: var(--ss-text-sm);
+		font-weight: 600;
 		text-align: right;
 	}
 
 	.ends {
 		display: flex;
 		justify-content: space-between;
-		font-size: 0.75rem;
-		color: var(--muted);
-		margin-top: -0.25rem;
+		margin-top: -4px;
+		color: var(--ss-tx-2);
+		font-size: var(--ss-text-2xs);
 	}
 
-	.help {
-		font-size: 0.85rem;
-		color: var(--muted);
-	}
-
-	.choice legend {
-		margin-bottom: 0.35rem;
-	}
-
-	.segmented {
-		display: flex;
+	.segment {
 		flex-wrap: wrap;
-		gap: 0.4rem;
+		justify-self: start;
 	}
 
-	.segmented label {
+	.segment label {
 		position: relative;
-		font-weight: 500;
-		font-size: 0.9rem;
+		display: inline-flex;
 	}
 
-	.segmented input {
+	.segment input {
 		position: absolute;
-		opacity: 0;
 		inset: 0;
 		margin: 0;
+		opacity: 0;
 		cursor: pointer;
 	}
 
-	.segmented span {
-		display: inline-flex;
-		align-items: center;
-		min-height: 2.5rem;
-		padding: 0.35rem 0.8rem;
-		border: 1px solid var(--border);
-		border-radius: 999px;
-		background: var(--surface);
+	.segment span {
+		transition:
+			color var(--ss-dur-hover) var(--ss-ease-hover),
+			background var(--ss-dur-hover) var(--ss-ease-hover);
+		min-width: 54px;
+		padding: 3px 12px;
+		border-radius: var(--ss-radius-full);
+		color: var(--ss-tx-2);
+		font-size: var(--ss-text-xs);
+		font-weight: 500;
+		text-align: center;
 		cursor: pointer;
 	}
 
-	.segmented input:checked + span {
-		background: var(--accent);
-		border-color: var(--accent);
-		color: var(--on-accent);
+	.segment input:checked + span {
+		background: var(--ss-ui-3);
+		color: var(--ss-tx);
 	}
 
-	.segmented input:focus-visible + span {
-		outline: 3px solid var(--accent);
-		outline-offset: 2px;
+	@media (hover: hover) {
+		.segment input:hover + span {
+			color: var(--ss-tx);
+		}
+	}
+
+	.segment input:focus-visible + span {
+		outline: var(--ss-focus-ring);
+		outline-offset: var(--ss-focus-offset);
+	}
+
+	@media (pointer: coarse) {
+		.segment span {
+			display: inline-flex;
+			align-items: center;
+			min-height: var(--ss-tap-target);
+		}
+	}
+
+	.checks {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--ss-space-2) var(--ss-space-5);
 	}
 
 	.group {
-		padding: 0.75rem;
-		border: 1px dashed var(--border);
-		border-radius: var(--radius);
-	}
-
-	.group legend {
-		padding: 0 0.25rem;
+		display: grid;
+		gap: var(--ss-space-3);
+		max-width: 36rem;
 	}
 
 	.per-option {
 		display: grid;
-		gap: 0.75rem;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+		gap: var(--ss-space-8) var(--ss-space-6);
 	}
 
-	.card {
-		padding: 0.9rem;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: var(--radius);
+	.option {
+		padding-top: var(--ss-space-4);
+		border-top: var(--ss-hairline) solid var(--ss-ui-2);
 	}
 
-	.card > legend {
+	.option > legend {
 		float: left;
 		width: 100%;
-		margin-bottom: 0.75rem;
-		font-size: 1.05rem;
-		font-weight: 700;
-		color: var(--text);
+		margin-bottom: var(--ss-space-4);
+		color: var(--ss-tx);
+		font-size: var(--ss-text-md);
+		font-weight: 600;
 	}
 
-	.card > legend + :global(*) {
+	.option > legend + :global(*) {
 		clear: both;
 	}
 </style>

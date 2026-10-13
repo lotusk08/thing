@@ -17,6 +17,23 @@ Each model also reports a **lean** (its pick, if there's no tie), a **confidence
 
 The **verdict** names the option with the highest average across filled models and how many models agree with it. Confidence is high when 3+ models are filled, ≥75% agree, and the lead is ≥10 points. It is medium with 2+ models, ≥50% agreement, and a lead ≥5. Otherwise it is low. **Copy Markdown** exports the table, the verdict, and each model's summary.
 
+## Design
+
+The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotusk08/ss), installed as the `ss` package). It uses SS's own tokens, fonts, icons and components and adds no palette of its own.
+
+- **Surface:** Desk, the SS default for working tools: near-white or near-black ground with near-black or near-white ink. There is one accent, blue by day and ember by night, and it marks what you can act on.
+- **Type:** the decision title is set in the SS title face (Domaine Display Narrow italic, falling back to Newsreader). Everything else uses the system sans, then Inter Display. Figures use the figure face with tabular digits.
+- **Components** (used as SS ships them):
+  - `.ss-topbar` and the `.ss-mode` disc that turns into a crescent (`modeIcon()`, `initMode`/`toggleMode`).
+  - `.ss-chip` for options and `.ss-segment` for the model tabs and choices of up to three states; larger choices use a menu.
+  - `.ss-input` underlines, `.ss-check`, `.ss-btn`, and `.ss-note` for each model's estimate (tip/info/warning for high/medium/low confidence).
+  - `.ss-swap` for the scoreboard toggle and the copy button (copy turns to a check), `.ss-tip`, `.ss-toast` and `.ss-dot`.
+  - SS line icons.
+- **Layout:** hairlines instead of cards.
+- **Motion:** the header rises once on load (`.ss-enter`), and the scoreboard table opens in place (`.ss-move.tall`). Hovers are the one SS motion and sit under `(hover: hover)`. Everything that moves stops under reduced motion.
+- **Mode:** follows the system. A choice of the other mode is kept in `localStorage`, as SS does.
+- **Contrast:** SS's faint ink (`--ss-tx-3`, 3.2:1) is only used for placeholders and marks. Hints, labels and captions use `--ss-tx-2` so they clear WCAG AA.
+
 ## Commands
 
 ```bash
@@ -35,9 +52,11 @@ src/
   app.css, app.html
   routes/+layout.ts            ssr = false, prerender = true (adapter-static, single page)
   routes/+page.svelte          composes the components
+  ss.d.ts                      types for the parts of `ss` used (mode, modeIcon)
   lib/
     state.svelte.ts            $state / $derived store, localStorage persistence via $effect
-    components/                thin UI: header, tabs, panel, scoreboard
+    icons.ts                   the SS icons used, from its single-file SVGs
+    components/                thin UI on SS classes: header, tabs, panel, scoreboard, Icon
       fields/Fields.svelte     renders ANY inputsSchema (recursive)
       fields/ListInput.svelte
     core/                      plain TS, no Svelte imports
@@ -150,5 +169,6 @@ Guidelines:
 - `npm run check`: 0 errors, 0 warnings (strict, `noUncheckedIndexedAccess`).
 - `npm test`: 57 tests across 9 files.
 - Lighthouse (mobile, production build): Performance 99, Accessibility 100, Best Practices 100, SEO 100.
+- axe: no violations on any model, in light and dark, with inputs filled and the scoreboard open.
 - Keyboard: arrow keys, Home and End move through the tabs; every control is native (range, radio, checkbox, button) and has a visible `:focus-visible` ring. Scoreboard cells are buttons that jump to their model.
 - Works at 380px wide with no horizontal page scroll. The tab bar and scoreboard scroll inside their own containers.

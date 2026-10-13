@@ -1,15 +1,22 @@
 <script lang="ts">
+	import type { Confidence } from '$lib/core/types';
+	import { optionLabel } from '$lib/core/util';
 	import { store } from '$lib/state.svelte';
+	import Icon from './Icon.svelte';
 
 	let { onjump }: { onjump: (modelId: string) => void } = $props();
 
 	let open = $state(matchMedia('(min-width: 40rem)').matches);
-	let status = $state('');
+	let copied = $state(false);
 	let fallback = $state('');
+	let toast = $state('');
 	let timer: ReturnType<typeof setTimeout> | undefined;
 
 	const verdict = $derived(store.board.verdict);
+	const leaderAverage = $derived(store.board.rows.find((r) => r.isLeader)?.average ?? 0);
+	const NOTE = { high: 'tip', medium: 'info', low: 'warning' } as const satisfies Record<Confidence, string>;
 	const round = (v: number) => Math.round(v);
+	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 	async function copy() {
 		const md = store.markdown();
@@ -17,13 +24,14 @@
 		try {
 			await navigator.clipboard.writeText(md);
 			fallback = '';
-			status = 'Copied as Markdown';
+			copied = true;
+			timer = setTimeout(() => (copied = false), 2000);
 		} catch {
 			fallback = md;
-			status = 'Clipboard blocked — copy the text below';
 			open = true;
+			toast = 'Clipboard blocked. Copy the Markdown below.';
+			timer = setTimeout(() => (toast = ''), 4000);
 		}
-		timer = setTimeout(() => (status = ''), 2500);
 	}
 
 	function selectAll(node: HTMLTextAreaElement) {
@@ -33,284 +41,338 @@
 </script>
 
 <aside class="board" aria-label="Scoreboard">
-	<div class="inner">
+	<div class="wrap inner">
 		<div class="bar">
-			<button type="button" class="toggle" aria-expanded={open} aria-controls="board-table" onclick={() => (open = !open)}>
-				<svg class="chev" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2 8l4-4 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
-				Scoreboard
+			<button
+				type="button"
+				class="ss-swap toggle"
+				aria-expanded={open}
+				aria-controls="board-table"
+				aria-label="Scoreboard"
+				title={open ? 'Hide scoreboard' : 'Show scoreboard'}
+				onclick={() => (open = !open)}
+			>
+				<span data-state="closed" class:on={!open}><Icon name="chevron-up" /></span>
+				<span data-state="open" class:on={open}><Icon name="chevron-down" /></span>
 			</button>
+
 			<p class="verdict">
-				{#if verdict.filled}<span class="badge" data-level={verdict.confidence}>{verdict.confidence}</span>{/if}
-				{verdict.text}
+				{#if verdict.filled === 0}
+					<span class="ss-faint">Fill in any model to see a verdict.</span>
+				{:else if verdict.leader}
+					<span><strong>{optionLabel(store.decision, verdict.leader)}</strong> leads</span>
+					<span class="part"><span class="ss-dot"></span><span class="ss-figure">avg {round(leaderAverage)}</span></span>
+					<span class="part"><span class="ss-dot"></span>{verdict.agree} of {plural(verdict.filled, 'model')} agree</span>
+					<span class="part confidence"><span class="ss-dot"></span><i class={NOTE[verdict.confidence]}></i>{verdict.confidence} confidence</span>
+				{:else}
+					<span><strong>{verdict.tied.map((id) => optionLabel(store.decision, id)).join(' and ')}</strong> are tied</span>
+					<span class="part"><span class="ss-dot"></span>{plural(verdict.filled, 'model')}</span>
+				{/if}
 			</p>
-			<button type="button" class="copy" onclick={copy}>{status === 'Copied as Markdown' ? 'Copied ✓' : 'Copy Markdown'}</button>
-			<span class="sr-only" role="status">{status}</span>
+
+			<span class="ss-tip">
+				<button
+					type="button"
+					class="ss-swap copy"
+					class:status={copied}
+					aria-label={copied ? 'Copied' : 'Copy as Markdown'}
+					onclick={copy}
+				>
+					<span data-state="copy" class:on={!copied}><Icon name="copy" /></span>
+					<span data-state="done" class:on={copied}><Icon name="check" /></span>
+				</button>
+				<span role="tooltip">{copied ? 'Copied' : 'Copy as Markdown'}</span>
+			</span>
 		</div>
 
-		<div class="table-wrap" id="board-table" hidden={!open}>
-			<table>
-				<caption class="sr-only">Estimate per option (0–100) by model. Select a cell to open that model.</caption>
-				<thead>
-					<tr>
-						<th scope="col" class="opt">Option</th>
-						{#each store.models as m (m.id)}
-							<th scope="col" title={m.name}>{m.short}</th>
-						{/each}
-						<th scope="col" class="avg">Avg</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each store.board.rows as row (row.option.id)}
-						<tr class:leader={row.isLeader}>
-							<th scope="row" class="opt">{row.label}</th>
-							{#each row.cells as cell (cell.model.id)}
-								<td>
-									<button
-										type="button"
-										class="cell"
-										class:lean={cell.isLean}
-										aria-label="{cell.model.name}, {row.label}: {cell.value === null
-											? 'not filled in yet'
-											: `${round(cell.value)} of 100${cell.isLean ? ', this model’s pick' : ''}`}. Open model."
-										onclick={() => onjump(cell.model.id)}
-									>
-										{#if cell.value === null}
+		<!-- SS's .ss-move.tall: opens in place and pushes the page; its content is one child. -->
+		<div class="ss-move tall body" class:show={open} id="board-table">
+			<div>
+				<div class="table-wrap">
+					<table>
+						<caption class="sr-only">Estimate per option (0–100) by model. Select a cell to open that model.</caption>
+						<thead>
+							<tr>
+								<th scope="col" class="opt">Option</th>
+								{#each store.models as m (m.id)}
+									<th scope="col" title={m.name}>{m.short}</th>
+								{/each}
+								<th scope="col" class="avg">Avg</th>
+							</tr>
+						</thead>
+						<tbody>
+							{#each store.board.rows as row (row.option.id)}
+								<tr class:leader={row.isLeader}>
+									<th scope="row" class="opt">{row.label}</th>
+									{#each row.cells as cell (cell.model.id)}
+										<td>
+											<button
+												type="button"
+												class="cell"
+												class:lean={cell.isLean}
+												aria-label="{cell.model.name}, {row.label}: {cell.value === null
+													? 'not filled in yet'
+													: `${round(cell.value)} of 100${cell.isLean ? ', this model’s pick' : ''}`}. Open model."
+												onclick={() => onjump(cell.model.id)}
+											>
+												{#if cell.value === null}
+													<span class="none">–</span>
+												{:else}
+													<span class="num ss-figure">{round(cell.value)}</span>
+													<span class="meter"><span style:width="{cell.value}%"></span></span>
+												{/if}
+											</button>
+										</td>
+									{/each}
+									<td class="avg">
+										{#if row.average === null}
 											<span class="none">–</span>
 										{:else}
-											<span class="num">{round(cell.value)}</span>
-											<span class="meter"><span style:width="{cell.value}%"></span></span>
+											<span class="num ss-figure">{round(row.average)}</span>
+											<span class="meter"><span style:width="{row.average}%"></span></span>
 										{/if}
-									</button>
-								</td>
+									</td>
+								</tr>
 							{/each}
-							<td class="avg">
-								{#if row.average === null}
-									<span class="none">–</span>
-								{:else}
-									<span class="num">{round(row.average)}</span>
-									<span class="meter"><span style:width="{row.average}%"></span></span>
-								{/if}
-							</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-			{#if fallback}
-				<label for="md-fallback" class="sr-only">Markdown export</label>
-				<textarea id="md-fallback" readonly rows="6" value={fallback} use:selectAll></textarea>
-			{/if}
+						</tbody>
+					</table>
+				</div>
+				{#if fallback}
+					<label for="md-fallback" class="sr-only">Markdown export</label>
+					<textarea id="md-fallback" class="ss-input md" readonly rows="6" value={fallback} use:selectAll></textarea>
+				{/if}
+			</div>
 		</div>
 	</div>
 </aside>
 
+{#if toast}
+	<div class="ss-toast error" role="alert">{toast}</div>
+{/if}
+
 <style>
 	.board {
 		position: sticky;
+		z-index: var(--ss-z-bar);
 		bottom: 0;
-		z-index: 10;
-		background: var(--surface);
-		border-top: 1px solid var(--border);
-		box-shadow: var(--shadow);
+		border-top: var(--ss-hairline) solid var(--ss-ui);
+		background: color-mix(in srgb, var(--ss-bg) 88%, transparent);
+		-webkit-backdrop-filter: blur(16px) saturate(160%);
+		backdrop-filter: blur(16px) saturate(160%);
 	}
 
 	.inner {
-		max-width: var(--max);
-		margin-inline: auto;
-		padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom));
+		padding-block: var(--ss-space-3) calc(var(--ss-space-3) + env(safe-area-inset-bottom, 0px));
 	}
 
 	.bar {
 		display: flex;
-		flex-wrap: wrap;
 		align-items: center;
-		gap: 0.25rem 0.75rem;
-	}
-
-	.toggle {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-		font-weight: 700;
-		border-color: transparent;
-		background: transparent;
-		padding-inline: 0.25rem;
-	}
-
-	.chev {
-		transition: transform 0.15s;
-	}
-
-	[aria-expanded='true'] .chev {
-		transform: rotate(180deg);
+		gap: var(--ss-space-3);
 	}
 
 	.verdict {
-		flex: 1 1 14rem;
-		order: 3;
-		font-size: 0.95rem;
-		padding-bottom: 0.25rem;
+		display: flex;
+		flex: 1;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0 var(--ss-space-1);
+		min-width: 0;
+		margin: 0;
+		color: var(--ss-tx-2);
+		font-size: var(--ss-text-sm);
+		line-height: var(--ss-leading-ui);
 	}
 
-	@media (min-width: 40rem) {
-		.verdict {
-			order: 0;
-			padding: 0;
-		}
+	.verdict strong {
+		color: var(--ss-tx);
+		font-weight: 600;
 	}
 
-	.copy {
-		margin-left: auto;
-		font-size: 0.9rem;
+	/* Each separator dot travels with the words after it, so none dangles at a line end. */
+	.part {
+		display: inline-flex;
+		align-items: center;
+		white-space: nowrap;
 	}
 
-	.badge {
-		display: inline-block;
-		margin-right: 0.35rem;
-		padding: 0 0.5rem;
-		border-radius: 999px;
-		font-size: 0.7rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.03em;
-		border: 1px solid currentColor;
-		vertical-align: 0.1em;
+	.confidence i {
+		width: 6px;
+		height: 6px;
+		margin-right: 6px;
+		border-radius: 50%;
 	}
 
-	.badge[data-level='high'] {
-		color: var(--good);
+	.confidence .tip {
+		background: var(--ss-tip);
 	}
 
-	.badge[data-level='medium'] {
-		color: var(--warn);
+	.confidence .info {
+		background: var(--ss-info);
 	}
 
-	.badge[data-level='low'] {
-		color: var(--bad);
+	.confidence .warning {
+		background: var(--ss-warning);
+	}
+
+	/* The copy button sits at the right edge: anchor its tooltip (and its growth) there. */
+	.ss-tip > [role='tooltip'] {
+		right: 0;
+		left: auto;
+		transform: scale(var(--s, 1));
+		transform-origin: calc(100% - 0.875rem) 100%;
+	}
+
+	.ss-tip > [role='tooltip']::after {
+		right: 0.875rem;
+		left: auto;
+		transform: translateX(50%);
+	}
+
+	.body {
+		margin-top: var(--ss-space-3);
 	}
 
 	.table-wrap {
 		position: relative;
-		overflow: auto;
 		max-height: min(45vh, 22rem);
-		margin-top: 0.5rem;
+		overflow: auto;
 		scrollbar-width: thin;
 	}
 
-	.table-wrap[hidden] {
-		display: none;
-	}
-
 	table {
+		width: 100%;
 		border-collapse: separate;
 		border-spacing: 0;
-		width: 100%;
-		font-variant-numeric: tabular-nums;
 	}
 
 	th,
 	td {
 		padding: 0;
+		vertical-align: middle;
+		border-bottom: var(--ss-hairline) solid var(--ss-ui);
+		font-size: var(--ss-text-sm);
 		text-align: center;
-		font-size: 0.85rem;
-		border-bottom: 1px solid var(--border);
 	}
 
 	thead th {
 		position: sticky;
-		top: 0;
 		z-index: 1;
-		background: var(--surface);
-		color: var(--muted);
-		font-weight: 600;
-		padding: 0.3rem 0.4rem;
+		top: 0;
+		padding: 0.35rem 0.4rem;
+		border-bottom-color: var(--ss-ui-2);
+		background: var(--ss-bg);
+		color: var(--ss-tx-2);
+		font-size: var(--ss-text-xs);
+		font-weight: 500;
 		white-space: nowrap;
 	}
 
 	.opt {
 		position: sticky;
-		left: 0;
 		z-index: 1;
-		background: var(--surface);
-		text-align: left;
-		padding: 0.3rem 0.6rem 0.3rem 0;
+		left: 0;
 		max-width: 9rem;
+		padding: 0.35rem 0.75rem 0.35rem 0;
 		overflow: hidden;
+		background: var(--ss-bg);
+		color: var(--ss-tx-2);
+		font-weight: 500;
+		text-align: left;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		font-weight: 600;
 	}
 
 	thead .opt {
 		z-index: 2;
 	}
 
-	.cell {
-		display: grid;
-		justify-items: center;
-		gap: 0.2rem;
-		width: 100%;
-		min-width: 3.5rem;
-		min-height: 2.75rem;
-		padding: 0.3rem 0.4rem;
-		border: 0;
-		border-radius: 6px;
-		background: transparent;
+	tr.leader .opt {
+		color: var(--ss-tx);
+		font-weight: 600;
 	}
 
-	.cell:hover {
-		background: var(--surface-2);
+	.cell {
+		display: grid;
+		align-content: center;
+		justify-items: center;
+		gap: 4px;
+		width: 100%;
+		min-width: 3.5rem;
+		min-height: var(--ss-tap-target);
+		padding: 0.35rem 0.4rem;
+		border: 0;
+		border-radius: var(--ss-radius-md);
+		background: none;
+		color: var(--ss-tx-2);
+		cursor: pointer;
+		transition: background var(--ss-dur-hover) var(--ss-ease-hover);
+	}
+
+	@media (hover: hover) {
+		.cell:hover {
+			background: var(--ss-ui-3);
+		}
+	}
+
+	.cell:active {
+		background: var(--ss-ui-3);
+		transition-duration: 0s;
+	}
+
+	.cell.lean {
+		color: var(--ss-tx);
 	}
 
 	.cell.lean .num {
-		color: var(--accent);
-		font-weight: 800;
+		font-weight: 700;
 	}
 
 	.avg {
 		min-width: 3.5rem;
-		padding: 0.3rem 0.4rem;
-		background: var(--surface-2);
-		font-weight: 700;
-	}
-
-	tr.leader .opt,
-	tr.leader .avg .num {
-		color: var(--accent);
+		padding: 0.35rem 0.4rem;
+		color: var(--ss-tx);
+		font-weight: 600;
 	}
 
 	.num {
 		display: block;
-		font-weight: 600;
+		line-height: 1.2;
 	}
 
 	.none {
-		color: var(--muted);
+		color: var(--ss-tx-2);
 	}
 
 	.meter {
 		display: block;
 		width: 100%;
-		max-width: 3.5rem;
-		height: 4px;
+		max-width: 3rem;
+		height: 2px;
 		margin-inline: auto;
-		border-radius: 2px;
-		background: var(--surface-2);
 		overflow: hidden;
-	}
-
-	.avg .meter {
-		background: var(--border);
+		border-radius: 1px;
+		background: var(--ss-ui);
 	}
 
 	.meter > span {
 		display: block;
 		height: 100%;
-		background: var(--meter);
+		background: var(--ss-tx-3);
 	}
 
-	textarea {
-		margin-top: 0.5rem;
-		font-family: ui-monospace, monospace;
-		font-size: 0.8rem;
+	.avg .meter > span {
+		background: var(--ss-tx-2);
+	}
+
+	.lean .meter > span,
+	tr.leader .avg .meter > span {
+		background: var(--ss-tx);
+	}
+
+	.md {
+		margin-top: var(--ss-space-3);
+		font-family: var(--ss-font-mono);
+		font-size: var(--ss-text-xs);
 	}
 </style>

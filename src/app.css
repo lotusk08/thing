@@ -1,172 +1,70 @@
+/*
+ * App layout on top of SS, Steve's Style (github:lotusk08/ss).
+ * Roles and tokens only; no raw colours. Desk surface, the SS default.
+ */
 :root {
-	color-scheme: light dark;
-
-	--bg: #f7f7f9;
-	--surface: #ffffff;
-	--surface-2: #f0f0f4;
-	--text: #18181b;
-	--muted: #5b5b66;
-	--border: #d9d9e0;
-	--accent: #4f46e5;
-	--accent-soft: #e8e7fd;
-	--on-accent: #ffffff;
-	--good: #166534;
-	--warn: #854d0e;
-	--bad: #b91c1c;
-	--meter: #4f46e5;
-	--shadow: 0 -6px 24px rgb(0 0 0 / 0.08);
-
-	--radius: 10px;
-	--gap: 1rem;
-	--max: 60rem;
-	--font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-
-	accent-color: var(--accent);
+	--column: 64rem;
 }
 
-@media (prefers-color-scheme: dark) {
-	:root {
-		--bg: #121216;
-		--surface: #1b1b21;
-		--surface-2: #25252d;
-		--text: #ececf1;
-		--muted: #a3a3b1;
-		--border: #383843;
-		--accent: #a5a1ff;
-		--accent-soft: #2c2a52;
-		--on-accent: #121216;
-		--good: #4ade80;
-		--warn: #facc15;
-		--bad: #f87171;
-		--meter: #8b86ff;
-		--shadow: 0 -6px 24px rgb(0 0 0 / 0.5);
-	}
+/*
+ * SS's faint ink (--ss-tx-3, 3.2:1 on Desk) is for placeholders and marks. Words a
+ * reader needs here (hints, labels, captions) read in --ss-tx-2, which clears WCAG AA.
+ */
+.ss-hint,
+.ss-label,
+.ss-faint {
+	color: var(--ss-tx-2);
 }
 
-*,
-*::before,
-*::after {
-	box-sizing: border-box;
-}
-
-html {
-	-webkit-text-size-adjust: 100%;
-	text-size-adjust: 100%;
-}
-
-body {
-	margin: 0;
-	background: var(--bg);
-	color: var(--text);
-	font: 16px/1.5 var(--font);
-	-webkit-font-smoothing: antialiased;
-}
-
-h1,
-h2,
-h3,
-p {
-	margin: 0;
-}
-
-button,
-input,
-textarea,
-select {
-	font: inherit;
-	color: inherit;
-}
-
-input[type='text'],
-input:not([type]),
-textarea {
-	width: 100%;
-	padding: 0.5rem 0.65rem;
-	border: 1px solid var(--border);
-	border-radius: 8px;
-	background: var(--surface);
-}
-
-input::placeholder,
-textarea::placeholder {
-	color: var(--muted);
-	opacity: 0.8;
-}
-
-textarea {
-	resize: vertical;
-	min-height: 4.5rem;
-}
-
-button {
-	cursor: pointer;
-	border: 1px solid var(--border);
-	border-radius: 8px;
-	background: var(--surface);
-	padding: 0.45rem 0.8rem;
-	min-height: 2.5rem;
-	line-height: 1.2;
-}
-
-button:hover:not(:disabled) {
-	border-color: var(--accent);
-}
-
-button:disabled {
-	cursor: not-allowed;
-	opacity: 0.5;
-}
-
-button.primary {
-	background: var(--accent);
-	border-color: var(--accent);
-	color: var(--on-accent);
-	font-weight: 600;
-}
-
-button.ghost {
-	border-color: transparent;
-	background: transparent;
-	color: var(--muted);
-}
-
-:focus-visible {
-	outline: 3px solid var(--accent);
-	outline-offset: 2px;
+.wrap {
+	width: min(var(--column), 100% - var(--ss-gutter) * 2);
+	margin-inline: auto;
 }
 
 input[type='range'] {
 	width: 100%;
+	min-height: 1.5rem;
 	margin: 0;
-	min-height: 1.75rem;
+	accent-color: var(--ss-accent);
+	cursor: pointer;
 }
 
-fieldset {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	min-width: 0;
+select.ss-input {
+	cursor: pointer;
 }
 
-legend {
-	padding: 0;
+select.ss-input option {
+	background: var(--ss-bg-2);
+	color: var(--ss-tx);
 }
 
 .sr-only {
 	position: absolute;
 	width: 1px;
 	height: 1px;
-	padding: 0;
 	margin: -1px;
+	padding: 0;
 	overflow: hidden;
 	clip-path: inset(50%);
 	white-space: nowrap;
 	border: 0;
 }
 
-@media (prefers-reduced-motion: reduce) {
-	* {
-		scroll-behavior: auto !important;
-		transition: none !important;
+/* SS's round buttons are 1.75rem; give them a 44px hit area under a finger. */
+@media (pointer: coarse) {
+	.ss-mode,
+	.ss-swap {
+		position: relative;
+	}
+
+	.ss-mode::before,
+	.ss-swap::before {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: var(--ss-tap-target);
+		height: var(--ss-tap-target);
+		content: '';
+		transform: translate(-50%, -50%);
 	}
 }
