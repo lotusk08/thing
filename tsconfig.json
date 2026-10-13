@@ -1,7 +1,16 @@
 {
-	"extends": "astro/tsconfigs/base",
+	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
-		"types": ["node"]
-	},
-	"include": ["src", ".astro/types.d.ts", "emdash-env.d.ts"]
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"moduleResolution": "bundler"
+	}
 }

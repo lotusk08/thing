@@ -1,32 +1,26 @@
 {
-  "name": "ud-trucks-vietnam",
-  "version": "0.0.3",
+  "name": "decision-tools",
+  "version": "0.1.0",
   "private": true,
+  "description": "Make one hard decision with six classic frameworks and compare their estimates side by side.",
   "type": "module",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "start": "node ./dist/server/entry.mjs",
-    "bootstrap": "emdash init",
-    "typecheck": "astro check"
-  },
-  "dependencies": {
-    "@astrojs/node": "^10.0.0",
-    "@astrojs/react": "^5.0.0",
-    "astro": "^6.0.1",
-    "better-sqlite3": "^12.8.0",
-    "emdash": "^0.4.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "prepare": "svelte-kit sync || echo ''",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.7"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3",
-      "esbuild"
-    ]
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.70.3",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.6",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
   }
 }

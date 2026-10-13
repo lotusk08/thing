@@ -1,5 +1,9 @@
 node_modules
-dist
-.astro
-uploads
-data.db
+/build
+/.svelte-kit
+/package
+.env
+.env.*
+!.env.example
+vite.config.*.timestamp-*
+.DS_Store
