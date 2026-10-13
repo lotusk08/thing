@@ -1,4 +1,4 @@
-Decision Tools: a client-only SvelteKit (Svelte 5 runes, TS, Vite, adapter-static) app for weighing one decision with six frameworks. See README.md.
+Things: a client-only SvelteKit (Svelte 5 runes, TS, Vite, adapter-static) app for weighing one decision with six frameworks. See README.md.
 
 ## Commands
 
@@ -21,3 +21,4 @@ All three of `npm test`, `npm run check` and `npm run build` must pass before co
   - Hover rules go under `(hover: hover)` on `--ss-dur-hover`/`--ss-ease-hover`. Things that come and go use `.ss-move`.
   - Readable text uses `--ss-tx-2` or stronger (WCAG AA). `--ss-tx-3` is only for placeholders and marks.
   - Icons come from `src/lib/icons.ts` (SS single-file SVGs). Add a name there rather than importing a whole icon set.
+  - The title face (Domaine Display Narrow) is commercial. `scripts/fonts.js` fetches it into `static/fonts/` (gitignored) before `dev` and `build`. Never commit font files from stevehoang.com.

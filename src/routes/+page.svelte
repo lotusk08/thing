@@ -39,12 +39,12 @@
 </script>
 
 <svelte:head>
-	<title>{title ? `${title} · Decision Tools` : 'Decision Tools'}</title>
+	<title>{title ? `${title} · Things` : 'Things'}</title>
 </svelte:head>
 
 <div class="page">
 	<header class="ss-topbar wrap">
-		<h1 class="mark">Decision Tools</h1>
+		<h1 class="mark">Things</h1>
 		<div class="ss-topbar-end">
 			<button type="button" class="ss-btn ghost small" onclick={startOver}>
 				<Icon name="plus" /> New decision

@@ -1,11 +1,14 @@
 {
-  "name": "decision-tools",
+  "name": "things",
   "version": "0.1.0",
   "private": true,
   "description": "Make one hard decision with six classic frameworks and compare their estimates side by side.",
   "type": "module",
   "scripts": {
+    "fonts": "node scripts/fonts.js",
+    "predev": "node scripts/fonts.js",
     "dev": "vite dev",
+    "prebuild": "node scripts/fonts.js",
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",

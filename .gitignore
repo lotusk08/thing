@@ -1,5 +1,7 @@
 node_modules
 /build
+# Domaine is commercial: fetched at build time (scripts/fonts.js), never committed
+/static/fonts/
 /.svelte-kit
 /package
 .env

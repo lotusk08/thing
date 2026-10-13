@@ -1,8 +1,8 @@
-# Decision Tools
+# Things
 
 Make one hard decision with six classic frameworks. Enter the decision and its options once, switch between models, and compare their estimates side by side on a scoreboard.
 
-Local-first: no backend, no account, no analytics. Everything lives in your browser's `localStorage` (key `decision-tools:v1`).
+Local-first: no backend, no account, no analytics. Everything lives in your browser's `localStorage` (key `things:v1`).
 
 | Model | Estimate (0–100 per option) |
 | --- | --- |
@@ -22,7 +22,11 @@ The **verdict** names the option with the highest average across filled models a
 The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotusk08/ss), installed as the `ss` package). It uses SS's own tokens, fonts, icons and components and adds no palette of its own.
 
 - **Surface:** Desk, the SS default for working tools: near-white or near-black ground with near-black or near-white ink. There is one accent, blue by day and ember by night, and it marks what you can act on.
-- **Type:** the decision title is set in the SS title face (Domaine Display Narrow italic, falling back to Newsreader). Everything else uses the system sans, then Inter Display. Figures use the figure face with tabular digits.
+- **Type:** the decision title and the "Things" mark use the SS title face, Domaine Display Narrow italic. Everything else uses the system sans, then Inter Display. Figures use the figure face with tabular digits.
+- **Title font:** Domaine is commercial, so it is never committed.
+  - `scripts/fonts.js` runs before `dev` and `build` and fetches it from stevehoang.com into `static/fonts/` (gitignored), as SS's own site does. The page preloads it.
+  - `SS_PRIVATE_FONTS=<stevehoang.com>/public/assets/fonts` reads it from a local checkout instead.
+  - If neither works, the build warns and uses Newsreader italic, the SS fallback.
 - **Components** (used as SS ships them):
   - `.ss-topbar` and the `.ss-mode` disc that turns into a crescent (`modeIcon()`, `initMode`/`toggleMode`).
   - `.ss-chip` for options and `.ss-segment` for the model tabs and choices of up to three states; larger choices use a menu.
@@ -38,10 +42,10 @@ The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotus
 
 ```bash
 npm install
-npm run dev       # http://localhost:5173
+npm run dev       # http://localhost:5173 (fetches the title font first)
 npm test          # vitest: every compute(), schema, scoreboard, markdown
 npm run check     # svelte-check, strict TS
-npm run build     # static site in build/ (deploy to any static host)
+npm run build     # static site in build/, title font included (deploy to any static host)
 npm run preview
 ```
 
@@ -168,7 +172,7 @@ Guidelines:
 
 - `npm run check`: 0 errors, 0 warnings (strict, `noUncheckedIndexedAccess`).
 - `npm test`: 57 tests across 9 files.
-- Lighthouse (mobile, production build): Performance 99, Accessibility 100, Best Practices 100, SEO 100.
+- Lighthouse (mobile, production build): Performance 98, Accessibility 100, Best Practices 100, SEO 100.
 - axe: no violations on any model, in light and dark, with inputs filled and the scoreboard open.
 - Keyboard: arrow keys, Home and End move through the tabs; every control is native (range, radio, checkbox, button) and has a visible `:focus-visible` ring. Scoreboard cells are buttons that jump to their model.
 - Works at 380px wide with no horizontal page scroll. The tab bar and scoreboard scroll inside their own containers.

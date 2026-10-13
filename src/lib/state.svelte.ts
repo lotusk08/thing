@@ -7,7 +7,7 @@ import { buildScoreboard } from './core/scoreboard';
 import { MAX_OPTIONS, MIN_OPTIONS, type Decision, type Estimate, type ModelId, type OptionId } from './core/types';
 import { isRecord } from './core/util';
 
-const STORAGE_KEY = 'decision-tools:v1';
+const STORAGE_KEY = 'things:v1';
 
 type Inputs = Record<string, unknown>;
 

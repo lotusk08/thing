@@ -9,11 +9,16 @@
 		<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)" />
 		<script>try{var m=localStorage.getItem('mode');if(m==='light'||m==='dark')document.documentElement.setAttribute('data-mode',m)}catch(e){}</script>
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
-		<title>Decision Tools</title>
+		<link rel="preload" href="%sveltekit.assets%/fonts/domaine/regular-italic.woff2" as="font" type="font/woff2" crossorigin />
+		<style>
+			@font-face{font-family:'Domaine Display Narrow';font-style:italic;font-weight:400;font-display:block;src:url('%sveltekit.assets%/fonts/domaine/regular-italic.woff2') format('woff2')}
+			@font-face{font-family:'Domaine Display Narrow';font-style:italic;font-weight:600;font-display:block;src:url('%sveltekit.assets%/fonts/domaine/semibold-italic.woff2') format('woff2')}
+		</style>
+		<title>Things</title>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
-		<noscript>Decision Tools needs JavaScript to run.</noscript>
+		<noscript>Things needs JavaScript to run.</noscript>
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>
