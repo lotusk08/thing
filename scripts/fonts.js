@@ -1,20 +1,18 @@
 /**
- * The SS title face, Domaine Display Narrow italic, is commercial: like SS's own
- * site (ss/scripts/site.js), it is fetched from stevehoang.com at build time,
- * served from this app's static files, and never committed.
+ * The title face, Domaine Display Narrow Medium (upright, with Vietnamese), is
+ * commercial: like SS's own site (ss/scripts/site.js), it is fetched from
+ * stevehoang.com at build time, served from this app's static files, and never
+ * committed.
  *
  * SS_PRIVATE_FONTS=<stevehoang.com>/public/assets/fonts reads it from a local
  * checkout instead. A failed fetch is a warning, not a stop: an earlier copy is
- * kept, or the file becomes Newsreader italic (the SS fallback), so the page
- * never asks for a missing font.
+ * kept, or the file becomes Newsreader (the SS serif fallback), so the page never
+ * asks for a missing font.
  */
 import { access, copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 
-const FONTS = [
-	['regular-italic.woff2', 'domaine-display-narrow/svn-domaine-display-narrow-regular-italic.woff2'],
-	['semibold-italic.woff2', 'domaine-display-narrow/svn-domaine-display-narrow-semibold-italic.woff2']
-];
-const FALLBACK = new URL('../node_modules/ss/fonts/newsreader/newsreader-latin-400-italic.woff2', import.meta.url);
+const FONTS = [['medium.woff2', 'domaine-display-narrow/svn-domaine-display-narrow-medium.woff2']];
+const FALLBACK = new URL('../node_modules/ss/fonts/newsreader/newsreader-latin-600-normal.woff2', import.meta.url);
 const OUT = new URL('../static/fonts/domaine/', import.meta.url);
 
 async function get(from) {
@@ -35,7 +33,7 @@ for (const [to, from] of FONTS) {
 			() => true,
 			() => false
 		);
-		console.warn(`title font ${from} not available (${error.message}); ${kept ? 'keeping the earlier copy' : 'Newsreader italic is used'}`);
+		console.warn(`title font ${from} not available (${error.message}); ${kept ? 'keeping the earlier copy' : 'Newsreader is used'}`);
 		if (!kept) await copyFile(FALLBACK, dest);
 	}
 }

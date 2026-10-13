@@ -101,8 +101,8 @@
 		color: var(--ss-tx);
 		font-family: var(--ss-font-title);
 		font-size: var(--ss-display-1);
-		font-style: italic;
-		font-weight: 400;
+		font-style: normal;
+		font-weight: 500;
 		line-height: 1.15;
 		letter-spacing: var(--ss-tracking-display);
 		text-wrap: balance;
