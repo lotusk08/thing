@@ -8,6 +8,8 @@ npm run dev | npm test | npm run check | npm run build
 
 All three of `npm test`, `npm run check` and `npm run build` must pass before committing.
 
+Deploys as the Cloudflare Worker `thing` on `thing.stevehoang.com` (`wrangler.jsonc`, static assets from `build/`): `npm run deploy`, or Cloudflare's Git build with `npx wrangler deploy`.
+
 ## Rules
 
 - `src/lib/core/**` is plain TypeScript with no Svelte imports. All scoring logic lives there and is unit-tested.

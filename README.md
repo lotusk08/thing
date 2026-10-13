@@ -53,6 +53,20 @@ npm run build     # static site in build/, title font included (deploy to any st
 npm run preview
 ```
 
+## Deploy
+
+Things deploys to **[thing.stevehoang.com](https://thing.stevehoang.com)** as a Cloudflare Worker named `thing` that serves `build/` as static assets, the same way `ss` and `write` are deployed. `wrangler.jsonc` holds the custom domain (`thing.stevehoang.com`, `custom_domain: true`), so the deploy itself attaches the domain to the stevehoang.com zone.
+
+- **From Git** (Workers & Pages → Create → Import a repository → `lotusk08/thing`):
+  - Build command `npm run build`.
+  - Deploy command `npx wrangler deploy`.
+  - Every push to `main` then redeploys.
+- **From a machine:** `npx wrangler login`, then `npm run deploy`.
+
+`static/_headers` gives the hashed `/_app/immutable/*` files a one-year immutable cache and sets `nosniff` and a referrer policy. Unknown paths fall back to the app.
+
+The build downloads the title font from stevehoang.com (see Design), so the build host needs to reach it. Otherwise the title falls back to Newsreader.
+
 ## Architecture
 
 ```

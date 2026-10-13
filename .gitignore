@@ -1,5 +1,6 @@
 node_modules
 /build
+/.wrangler
 # Domaine is commercial: fetched at build time (scripts/fonts.js), never committed
 /static/fonts/
 /.svelte-kit
