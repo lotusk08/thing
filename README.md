@@ -22,15 +22,15 @@ The **verdict** names the option with the highest average across filled models a
 The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotusk08/ss), installed as the `ss` package). It uses SS's own tokens, fonts, icons and components and adds no palette of its own.
 
 - **Surface:** Desk, the SS default for working tools: near-white or near-black ground with near-black or near-white ink. There is one accent, blue by day and ember by night, and it marks what you can act on.
-- **Type:** the decision title and the logo use Domaine Display Narrow **Medium**, upright, in the Vietnamese (SVN) cut. This departs on purpose from SS, whose titles are Domaine italic. Everything else uses the system sans, then Inter Display. Figures use the figure face with tabular digits.
-- **Logo:** the wordmark is "Things" in Domaine Medium. The dot of the *i* is its one bright thing: the SS accent, blue by day and ember by night, like the option you end up choosing. The mark is "T." in the same face, which holds up at 16px; its full stop is the same dot.
+- **Type:** the decision title and the logo use the SS title face, Domaine Display Narrow regular italic, in the Vietnamese (SVN) cut. Everything else uses the system sans, then Inter Display. Figures use the figure face with tabular digits.
+- **Logo:** the wordmark is "Things" in Domaine regular italic. The dot of the *i* is its one bright thing: the SS accent, blue by day and ember by night, like the option you end up choosing. The mark is "T." in the same face; its full stop is the same dot.
   - The glyphs are outlined, so no font ships with the logo.
   - `npm run logo` (`scripts/logo.js`) redraws `static/logo.svg`, `static/favicon.svg` and `src/lib/logo.ts` (the paths the top bar uses). Colours come from SS's roles.
   - `static/apple-touch-icon.png` is the mark at 140px on the Desk ground, 180px square.
-- **Title font:** Domaine is commercial, so it is never committed. The blog hosts `svn-domaine-display-narrow-medium.woff2` (unhinted, with every glyph and feature) next to its italics.
+- **Title font:** Domaine is commercial, so it is never committed. The build uses the blog's own `svn-domaine-display-narrow-regular-italic.woff2`.
   - `scripts/fonts.js` runs before `dev` and `build` and fetches it from stevehoang.com into `static/fonts/` (gitignored), as SS's own site does. The page preloads it.
   - `SS_PRIVATE_FONTS=<stevehoang.com>/public/assets/fonts` reads it from a local checkout instead.
-  - If neither works, the build warns and uses Newsreader, the SS serif fallback.
+  - If neither works, the build warns and uses Newsreader italic, the SS fallback.
 - **Components** (used as SS ships them):
   - `.ss-topbar` and the `.ss-mode` disc that turns into a crescent (`modeIcon()`, `initMode`/`toggleMode`).
   - `.ss-chip` for options and `.ss-segment` for the model tabs and choices of up to three states; larger choices use a menu.
