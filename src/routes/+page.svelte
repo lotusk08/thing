@@ -14,6 +14,7 @@
 	import ModelPanel from '$lib/components/ModelPanel.svelte';
 	import ModelTabs from '$lib/components/ModelTabs.svelte';
 	import Scoreboard from '$lib/components/Scoreboard.svelte';
+	import Wordmark from '$lib/components/Wordmark.svelte';
 	import { store } from '$lib/state.svelte';
 
 	onMount(() => {
@@ -44,7 +45,7 @@
 
 <div class="page">
 	<header class="ss-topbar wrap">
-		<h1 class="mark">Things</h1>
+		<h1 class="mark"><Wordmark /><span class="sr-only">Things</span></h1>
 		<div class="ss-topbar-end">
 			<button type="button" class="ss-btn ghost small" onclick={startOver}>
 				<Icon name="plus" /> New decision
@@ -73,13 +74,7 @@
 
 	.mark {
 		margin: 0;
-		color: var(--ss-tx);
-		font-family: var(--ss-font-title);
-		font-size: 1.35rem;
-		font-style: italic;
-		font-weight: 400;
 		line-height: 1;
-		white-space: nowrap;
 	}
 
 	.ss-topbar-end {

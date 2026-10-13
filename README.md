@@ -1,4 +1,4 @@
-# Things
+<h1><img src="static/logo.svg" alt="Things" height="56"></h1>
 
 Make one hard decision with six classic frameworks. Enter the decision and its options once, switch between models, and compare their estimates side by side on a scoreboard.
 
@@ -23,6 +23,10 @@ The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotus
 
 - **Surface:** Desk, the SS default for working tools: near-white or near-black ground with near-black or near-white ink. There is one accent, blue by day and ember by night, and it marks what you can act on.
 - **Type:** the decision title and the "Things" mark use the SS title face, Domaine Display Narrow italic. Everything else uses the system sans, then Inter Display. Figures use the figure face with tabular digits.
+- **Logo:** the wordmark is "Things" in Domaine regular italic. The dot of the *i* is its one bright thing: the SS accent, blue by day and ember by night, like the option you end up choosing. The mark is "T." in Domaine semibold italic, which holds up at 16px; its full stop is the same dot.
+  - The glyphs are outlined, so no font ships with the logo.
+  - `npm run logo` (`scripts/logo.js`) redraws `static/logo.svg`, `static/favicon.svg` and `src/lib/logo.ts` (the paths the top bar uses). Colours come from SS's roles.
+  - `static/apple-touch-icon.png` is the mark at 140px on the Desk ground, 180px square.
 - **Title font:** Domaine is commercial, so it is never committed.
   - `scripts/fonts.js` runs before `dev` and `build` and fetches it from stevehoang.com into `static/fonts/` (gitignored), as SS's own site does. The page preloads it.
   - `SS_PRIVATE_FONTS=<stevehoang.com>/public/assets/fonts` reads it from a local checkout instead.
