@@ -40,6 +40,12 @@ export const coinFlip = defineModel({
 					const [heads, tails] = random() < 0.5 ? [a, b] : [b, a];
 					return { heads, tails, landed: random() < 0.5 ? heads : tails };
 				},
+				// On the map: each flip under the option it landed on, in the colour of the reaction.
+				map: {
+					label: 'reaction',
+					at: 'landed',
+					toneOf: (f) => (f.reaction === 'relieved' ? 'for' : f.reaction === 'disappointed' ? 'against' : undefined)
+				},
 				itemTitle(f, i, d) {
 					return `Flip ${i + 1}: heads ${optionLabel(d, f.heads)}, tails ${optionLabel(d, f.tails)} — it landed on ${optionLabel(d, f.landed)}.`;
 				}
@@ -49,7 +55,7 @@ export const coinFlip = defineModel({
 			'regret',
 			'Five years from now, which choice would you regret NOT making?',
 			(d) => [...d.options.map((o) => ({ value: o.id, label: optionLabel(d, o.id) })), { value: 'unsure', label: 'Not sure' }],
-			{ default: '' }
+			{ default: '', map: true }
 		)
 	],
 	/**

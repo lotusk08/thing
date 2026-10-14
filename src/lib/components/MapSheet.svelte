@@ -1,13 +1,12 @@
 <!--
-	The map's sheet: pick what to add, or edit one item or note with the same
-	generic Fields its model panel uses, bound to the same inputs in the store.
+	The map's sheet: pick what to add, or edit one thing on a model's map with the
+	same generic Fields its form uses, bound to the same inputs in the store.
 -->
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { listAt, type MapAdd, type MapEdit } from '$lib/core/map';
+	import { slotOf, type MapAdd, type MapEdit } from '$lib/core/map';
 	import { optionLabel } from '$lib/core/util';
 	import { store } from '$lib/state.svelte';
-	import { switchModel } from '$lib/switch';
 	import Fields from './fields/Fields.svelte';
 	import Icon from './Icon.svelte';
 
@@ -20,45 +19,36 @@
 		if (edit && !dialog.open) dialog.showModal();
 	});
 
-	const adds = $derived(
-		edit?.kind !== 'add' ? [] : edit.option ? (store.map.adds.options[edit.option] ?? []) : store.map.adds.shared
-	);
-
-	// The item being edited, live from the store.
+	// The thing being edited, live from the store.
 	const item = $derived(edit?.kind === 'item' ? edit.item : null);
-	const list = $derived(item ? (listAt(store.inputs[item.ref.model], item.ref.path) ?? []) : []);
-	const index = $derived(item ? list.findIndex((x) => x.id === item.id) : -1);
-	const model = $derived(item ? item.ref.model : edit?.kind === 'note' ? edit.note.model : null);
+	const found = $derived(item ? slotOf(store.inputs, item) : undefined);
+	const source = $derived(store.models.find((m) => m.id === item?.model)?.short ?? '');
 
 	async function add(choice: MapAdd) {
 		const id = store.addItem(choice);
 		if (!id) return;
-		edit = { kind: 'item', item: { ...choice, id }, fresh: true };
+		edit = { kind: 'item', item: { model: choice.model, path: choice.path, id, fields: choice.list.fields, list: choice.list, kind: choice.kind }, fresh: true };
 		await tick();
 		dialog.querySelector<HTMLElement>('input[type="text"], textarea')?.focus();
 	}
 
-	const touch = () => model && store.touch(model);
+	const touch = () => item && store.touch(item.model);
 
 	function remove() {
 		if (!item) return;
-		store.removeItem(item.ref, item.id);
+		store.removeItem(item);
 		dialog.close();
 	}
 
-	async function openModel() {
-		dialog.close();
-		if (model) await switchModel(model);
-	}
-
-	/** An item added here and left without text is dropped once the sheet has faded out. */
+	/** An item added here and left without its words is dropped once the sheet has faded out. */
 	async function closed() {
-		if (edit?.kind !== 'item' || !edit.fresh) return;
-		const { ref, id, field } = edit.item;
-		const text = field.map && listAt(store.inputs[ref.model], ref.path)?.find((x) => x.id === id)?.[field.map.label];
+		if (edit?.kind !== 'item' || !edit.fresh || !edit.item.list?.map) return;
+		const added = edit.item;
+		const words = slotOf(store.inputs, added);
+		const text = words?.holder[words.slot]?.[added.list!.map!.label];
 		if (typeof text === 'string' && text.trim()) return;
 		await Promise.all(dialog.getAnimations().map((a) => a.finished)).catch(() => {});
-		store.removeItem(ref, id);
+		store.removeItem(added);
 	}
 </script>
 
@@ -76,14 +66,16 @@
 				{edit.option ? `Add to ${optionLabel(store.decision, edit.option)}` : 'Add across options'}
 			</h2>
 			<div class="ss-menu menu">
-				{#each adds as choice (`${choice.ref.model}/${choice.ref.path.join('/')}`)}
+				{#each edit.adds as choice (`${choice.path.join('/')}`)}
 					<button type="button" disabled={choice.full} onclick={() => add(choice)}>
 						<i class="pip {choice.tone ?? ''}"></i>
 						<span>
 							{choice.kind}
-							<span class="from">
-								{choice.source}{#if choice.link}&nbsp;· {choice.link.label} {optionLabel(store.decision, choice.link.option)}{/if}{#if choice.full}&nbsp;· full{/if}
-							</span>
+							{#if choice.link || choice.full}
+								<span class="from">
+									{#if choice.link}{choice.link.label} {optionLabel(store.decision, choice.link.option)}{/if}{#if choice.full}{choice.link ? ' · ' : ''}full{/if}
+								</span>
+							{/if}
 						</span>
 					</button>
 				{/each}
@@ -92,30 +84,18 @@
 				<button type="button" class="ss-btn small" onclick={() => dialog.close()}>Cancel</button>
 			</div>
 		{:else if item}
-			<h2 id="sheet-title" class="ss-label">{item.kind} · {item.source}</h2>
-			{#if index >= 0}
+			<h2 id="sheet-title" class="ss-label">{item.kind ? `${item.kind} · ${source}` : source}</h2>
+			{#if found}
 				<form method="dialog" oninput={touch} onchange={touch}>
-					<Fields fields={item.field.fields} bind:value={list[index]!} decision={store.decision} idPrefix="sheet-{item.id}" />
+					<Fields fields={item.fields} bind:value={found.holder[found.slot]!} decision={store.decision} idPrefix="sheet-{item.path.join('-')}-{item.id ?? ''}" />
 					<div class="actions">
-						<button type="button" class="ss-btn ghost small remove" onclick={remove}><Icon name="trash" /> Remove</button>
-						<span class="end">
-							<button type="button" class="ss-btn ghost small" onclick={openModel}>Open {item.source}</button>
-							<button class="ss-btn primary small">Done</button>
-						</span>
+						{#if item.list}
+							<button type="button" class="ss-btn ghost small remove" onclick={remove}><Icon name="trash" /> Remove</button>
+						{/if}
+						<button class="ss-btn primary small done">Done</button>
 					</div>
 				</form>
 			{/if}
-		{:else if edit?.kind === 'note'}
-			<h2 id="sheet-title" class="ss-label">{edit.note.field.label} · {edit.note.source}</h2>
-			<form method="dialog" oninput={touch} onchange={touch}>
-				<Fields fields={[edit.note.field]} bind:value={store.inputs[edit.note.model]!} decision={store.decision} idPrefix="sheet-{edit.note.model}" />
-				<div class="actions">
-					<span class="end">
-						<button type="button" class="ss-btn ghost small" onclick={openModel}>Open {edit.note.source}</button>
-						<button class="ss-btn primary small">Done</button>
-					</span>
-				</div>
-			</form>
 		{/if}
 	</div>
 </dialog>
@@ -154,19 +134,18 @@
 		opacity: 0.45;
 	}
 
+	.menu .pip {
+		translate: 0 -1px;
+	}
+
 	.from {
 		display: block;
 		color: var(--ss-tx-2);
 		font-size: var(--ss-text-xs);
 	}
 
-	.menu .pip {
-		translate: 0 -1px;
-	}
-
 	.actions {
 		display: flex;
-		flex-wrap: wrap;
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--ss-space-2);
@@ -175,11 +154,10 @@
 
 	.menu + .actions {
 		margin-top: 0;
+		justify-content: flex-end;
 	}
 
-	.end {
-		display: flex;
-		gap: var(--ss-space-2);
+	.done {
 		margin-left: auto;
 	}
 </style>

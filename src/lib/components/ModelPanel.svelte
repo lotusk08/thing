@@ -4,6 +4,7 @@
 	import { store } from '$lib/state.svelte';
 	import Fields from './fields/Fields.svelte';
 	import Icon from './Icon.svelte';
+	import ModelMap from './ModelMap.svelte';
 
 	let { model }: { model: AnyModel } = $props();
 
@@ -38,9 +39,13 @@
 		<p class="estimate empty">No estimate yet. Fill in the inputs below.</p>
 	{/if}
 
-	<form oninput={touch} onchange={touch} onsubmit={(e) => e.preventDefault()}>
-		<Fields fields={model.inputsSchema} bind:value={store.inputs[model.id]!} decision={store.decision} idPrefix={model.id} />
-	</form>
+	{#if store.view === 'map'}
+		<ModelMap {model} />
+	{:else}
+		<form oninput={touch} onchange={touch} onsubmit={(e) => e.preventDefault()}>
+			<Fields fields={model.inputsSchema} bind:value={store.inputs[model.id]!} decision={store.decision} idPrefix={model.id} />
+		</form>
+	{/if}
 
 	<div class="actions">
 		<button type="button" class="ss-btn ghost small" onclick={reset}>

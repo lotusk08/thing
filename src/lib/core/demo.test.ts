@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isBlank } from './decision';
 import { demo } from './demo';
-import { decisionMap } from './map';
+import { modelMap } from './map';
 import { models } from './models';
 import { normalizeInputs } from './schema';
 import { buildScoreboard } from './scoreboard';
@@ -37,14 +37,22 @@ describe('demo', () => {
 		expect(JSON.stringify(inputs)).toContain('Pay more than triples');
 	});
 
-	it('gives the map its links: causes resolved by one option, both, or none', () => {
-		const map = decisionMap(decision, models, inputs);
+	it('gives Fishbone’s map its links: causes resolved by one option, both, or none', () => {
+		const fishbone = models.find((m) => m.id === 'fishbone')!;
+		const map = modelMap(decision, fishbone, inputs.fishbone);
 		const [sg, hcm] = decision.options.map((o) => o.id);
 		expect(map.shared.map((i) => i.links.length).sort()).toEqual([0, 1, 1, 1, 1, 2]);
 		expect(map.shared.find((i) => i.links.length === 2)?.links).toEqual([sg, hcm]);
-		expect(map.options[sg!]!.length).toBeGreaterThan(5);
-		expect(map.options[hcm!]!.length).toBeGreaterThan(5);
-		expect(map.notes[0]?.text).toBe('I feel stuck in my career.');
+		expect(map.top[0]?.text).toBe('I feel stuck in my career.');
+	});
+
+	it('puts something on every model’s map, under both options', () => {
+		for (const m of models) {
+			const map = modelMap(decision, m, inputs[m.id]);
+			const under = decision.options.map((o) => map.options[o.id]!.length);
+			if (m.id === 'fishbone') expect(map.shared.length, m.id).toBe(6);
+			else for (const n of under) expect(n, m.id).toBeGreaterThan(0);
+		}
 	});
 
 	it('makes the models disagree, as a real decision does', () => {

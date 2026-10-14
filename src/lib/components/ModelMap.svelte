@@ -1,19 +1,23 @@
 <!--
-	The decision map (core/map.ts): the problem, the items the
-	models share across options with lines to the options they link to, and each
-	option with what speaks for and against it. Every item opens in the sheet.
-	Where the options stack (a phone) the lines go and the links read as text.
+	A model's map (core/map.ts), shown in its panel while the map is on: what sits
+	at the top (Fishbone's problem, Coin's regret), what the model shares across
+	options with lines to the options it links to, and under each option, with the
+	model's score for it, what the model holds about it. Every item opens in the
+	sheet. Where the options stack (a phone) the lines go and the links read as text.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { MapEdit, MapItem } from '$lib/core/map';
+	import { modelMap, type MapEdit, type MapItem } from '$lib/core/map';
+	import type { AnyModel } from '$lib/core/model';
 	import { optionLabel } from '$lib/core/util';
 	import { store } from '$lib/state.svelte';
 	import Icon from './Icon.svelte';
 	import MapSheet from './MapSheet.svelte';
 
-	const map = $derived(store.map);
-	const title = $derived(store.decision.title.trim());
+	let { model }: { model: AnyModel } = $props();
+
+	const map = $derived(modelMap(store.decision, model, store.inputs[model.id]));
+	const estimate = $derived(store.estimates[model.id]);
 	const empty = $derived(!map.shared.length && Object.values(map.options).every((items) => !items.length));
 
 	let root: HTMLElement;
@@ -57,8 +61,8 @@
 		return () => ro.disconnect();
 	});
 
-	const average = (option: string) => store.board.rows.find((row) => row.option.id === option);
 	const names = (ids: string[]) => ids.map((id) => optionLabel(store.decision, id)).join(', ');
+	const value = ({ n, max, signed }: NonNullable<MapItem['value']>) => (signed ? (n > 0 ? `+${n}` : `${n}`) : `${n}/${max}`);
 
 	const heat = (key: string) => ({
 		onpointerenter: () => (hot = key),
@@ -69,6 +73,7 @@
 </script>
 
 {#snippet node(item: MapItem, shared: boolean)}
+	{@const pip = `pip ${item.tone ?? ''}`}
 	<button
 		type="button"
 		class="node"
@@ -79,50 +84,58 @@
 		onclick={() => (sheet = { kind: 'item', item })}
 		{...shared ? heat(item.key) : {}}
 	>
-		<span class="kind"><i class="pip {item.tone ?? ''}"></i>{item.kind}</span>
-		<span class="text" class:none={!item.text}>{item.text || `Untitled ${item.kind.toLowerCase()}`}</span>
+		{#if item.kind}<span class="kind"><i class={pip}></i>{item.kind}</span>{/if}
+		<span class="text" class:none={!item.text}>
+			{#if !item.kind}<i class={pip}></i>{/if}{item.text || 'Not filled in yet'}
+		</span>
 		{#if item.value}
-			<span class="meta ss-figure">{item.value.n}/{item.value.max}</span>
+			<span class="meta ss-figure">{value(item.value)}</span>
 		{:else if shared && item.linkLabel}
 			<span class="meta">{item.links.length ? `${item.linkLabel} ${names(item.links)}` : 'No option yet'}</span>
 		{/if}
 	</button>
 {/snippet}
 
-<div id="panel-map" class="map" role="tabpanel" aria-labelledby="tab-map" tabindex="-1" bind:this={root}>
-	<header class="root">
-		<!-- The decision's own title is right above, in the header. -->
-		<h2 class="sr-only">Map of {title || 'the decision'}</h2>
-		{#each map.notes as note (`${note.model}/${note.field.key}`)}
-			<button type="button" class="note" onclick={() => (sheet = { kind: 'note', note })}>
-				<span class="ss-label">{note.field.label}</span>
-				<span class:none={!note.text}>{note.text || 'Not written yet'}</span>
-			</button>
-		{/each}
-		{#if empty}
-			<p class="ss-hint">Pros, cons, risks, causes and criteria from the models show here, linked to their options. Add them here or in the models.</p>
-		{/if}
-	</header>
+<section class="map" aria-labelledby="map-{model.id}" bind:this={root}>
+	<h3 id="map-{model.id}" class="sr-only">{model.short} map</h3>
+	{#if map.top.length || empty}
+		<header class="root">
+			{#each map.top as item (item.key)}
+				<button type="button" class="note" onclick={() => (sheet = { kind: 'item', item })}>
+					<span class="ss-label">{item.kind}</span>
+					<span class:none={!item.text}>{item.text || 'Not filled in yet'}</span>
+				</button>
+			{/each}
+			{#if empty}
+				<p class="ss-hint">Nothing on this map yet. Add here, or fill in the form.</p>
+			{/if}
+		</header>
+	{/if}
 
 	{#if map.shared.length || map.adds.shared.length}
 		<div class="shared" role="group" aria-label="Across options">
 			{#each map.shared as item (item.key)}
 				{@render node(item, true)}
 			{/each}
-			<button type="button" class="ss-btn ghost small add" onclick={() => (sheet = { kind: 'add' })}><Icon name="plus" /> Add</button>
+			{#if map.adds.shared.length}
+				<button type="button" class="ss-btn ghost small add" onclick={() => (sheet = { kind: 'add', adds: map.adds.shared })}>
+					<Icon name="plus" /> Add
+				</button>
+			{/if}
 		</div>
 	{/if}
 
 	<div class="options">
 		{#each store.decision.options as option (option.id)}
-			{@const row = average(option.id)}
-			<section class="option" class:hot={linked(option.id)} data-option={option.id} aria-labelledby="map-option-{option.id}" {...heat(option.id)}>
-				<h3 class="head" id="map-option-{option.id}">
+			{@const score = estimate?.perOption[option.id]}
+			{@const adds = map.adds.options[option.id] ?? []}
+			<section class="option" class:hot={linked(option.id)} data-option={option.id} aria-labelledby="map-{model.id}-{option.id}" {...heat(option.id)}>
+				<h4 class="head" id="map-{model.id}-{option.id}">
 					<span class="name">{optionLabel(store.decision, option.id)}</span>
-					<span class="score ss-figure" class:leader={row?.isLeader}>
-						{row?.average == null ? '–' : Math.round(row.average)}<span class="sr-only"> average</span>
+					<span class="score ss-figure" class:leader={estimate?.lean === option.id}>
+						{score === undefined ? '–' : Math.round(score)}<span class="sr-only"> of 100</span>
 					</span>
-				</h3>
+				</h4>
 				{#if map.options[option.id]?.length}
 					<ul>
 						{#each map.options[option.id] ?? [] as item (item.key)}
@@ -130,7 +143,11 @@
 						{/each}
 					</ul>
 				{/if}
-				<button type="button" class="ss-btn ghost small add" onclick={() => (sheet = { kind: 'add', option: option.id })}><Icon name="plus" /> Add</button>
+				{#if adds.length}
+					<button type="button" class="ss-btn ghost small add" onclick={() => (sheet = { kind: 'add', option: option.id, adds })}>
+						<Icon name="plus" /> Add
+					</button>
+				{/if}
 			</section>
 		{/each}
 	</div>
@@ -140,18 +157,15 @@
 			<path d={line.d} class:hot={hot === line.item || hot === line.option} />
 		{/each}
 	</svg>
-</div>
+</section>
 
 <MapSheet bind:edit={sheet} />
 
 <style>
 	.map {
-		view-transition-name: map;
-		outline: none;
 		position: relative;
 		display: grid;
 		gap: var(--ss-space-8);
-		padding-block: var(--ss-space-6) var(--ss-section-s);
 		container: map / inline-size;
 	}
 
@@ -249,6 +263,13 @@
 
 	.text {
 		overflow-wrap: anywhere;
+	}
+
+	/* A value's pip sits in its text (it has no kind line to sit in). */
+	.text .pip {
+		display: inline-block;
+		margin-right: 6px;
+		vertical-align: 0.1em;
 	}
 
 	.meta {

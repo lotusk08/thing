@@ -16,8 +16,8 @@ Deploys as the Cloudflare Worker `thing` on `thing.stevehoang.com` (`wrangler.js
 - Models are plugins in `src/lib/core/models/` (file + test + entry in `index.ts`). Adding a model must not require changes outside that folder. If a model needs a new kind of input, extend the generic schema (`core/schema.ts` + `components/fields/Fields.svelte`). Don't add model-specific UI.
 - `compute()` is pure, returns 0–100 per option on an absolute scale, and returns `null` when there isn't enough input yet.
 - Components stay thin. State lives in `src/lib/state.svelte.ts`.
-- The UI switches models and the map with `switchModel()` / `switchView()` (`src/lib/switch.ts`), never by setting `store.active` or `store.view`: they run the View Transition. The map is the first tab, before the models.
-- The decision map (`core/map.ts`) is generic: a model puts items on it with a `map` hint on a list, or `map: true` on a top-level text field. No model-specific map UI; the map edits the same inputs the panels do.
+- The UI switches models, and each model's form or map, with `switchModel()` / `switchView()` (`src/lib/switch.ts`), never by setting `store.active` or `store.view`: they run the View Transition. The map toggle sits before the tabs and stays on across models.
+- Each model's map (`core/map.ts`) is generic: a model draws it with `map` hints on its fields (lists, numbers in a perOption field, top-level text or choice fields). No model-specific map UI; the map edits the same inputs the form does.
 - The demo (`core/demo.ts`) is raw inputs per model id, normalized on load, so a model needs no demo to work; `demo.test.ts` pins its verdict. The topbar button offers it only while the decision is blank (`store.blank`).
 - Styles more than one component uses (segment buttons, the status `.pip`, the remove button) live in `src/app.css`.
 - No runtime dependencies beyond `ss` (bundled at build): no UI component or chart libraries, no network calls. Dev-only: `opentype.js` and `wawoff2` for `npm run logo`; ESLint and knip for `npm run lint`.

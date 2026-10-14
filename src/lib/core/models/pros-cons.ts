@@ -3,7 +3,7 @@ import { field } from '../schema';
 import { optionLabel, sum } from '../util';
 
 const impact = { min: 1, max: 3, step: 1, default: 2, ends: ['low', 'high'] } as const;
-const feel = { min: -5, max: 5, step: 1, default: 0, signed: true, ends: ['awful', 'great'] } as const;
+const feel = { min: -5, max: 5, step: 1, default: 0, signed: true, ends: ['awful', 'great'], map: true } as const;
 
 export const prosCons = defineModel({
 	id: 'pros-cons',

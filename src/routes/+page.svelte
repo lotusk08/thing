@@ -10,7 +10,6 @@
 	import { initMode, toggleMode } from 'ss/mode';
 	import { onMount } from 'svelte';
 	import DecisionHeader from '$lib/components/DecisionHeader.svelte';
-	import DecisionMap from '$lib/components/DecisionMap.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import ModelPanel from '$lib/components/ModelPanel.svelte';
 	import ModelTabs from '$lib/components/ModelTabs.svelte';
@@ -51,7 +50,7 @@
 		<div class="ss-topbar-end">
 			<button type="button" class="ss-btn ghost small" onclick={fresh}>
 				<Icon name={store.blank ? 'lightbulb' : 'plus'} />
-				{store.blank ? 'Load demo' : 'New decision'}
+				<span class:shimmer={store.blank}>{store.blank ? 'Load demo' : 'New decision'}</span>
 			</button>
 			<span class="ss-dot"></span>
 			<button class="ss-mode" type="button" aria-label="Switch light and dark" onclick={toggleMode}>
@@ -64,13 +63,9 @@
 	<main class="wrap">
 		<DecisionHeader />
 		<ModelTabs />
-		{#if store.view === 'map'}
-			<DecisionMap />
-		{:else}
-			{#key store.active}
-				<ModelPanel model={store.activeModel} />
-			{/key}
-		{/if}
+		{#key store.active}
+			<ModelPanel model={store.activeModel} />
+		{/key}
 	</main>
 </div>
 <Scoreboard onjump={jump} />
@@ -91,5 +86,27 @@
 
 	main {
 		min-width: 0;
+	}
+
+	/*
+	 * "Load demo" invites a first try: a soft accent sheen drifts through the label
+	 * and rests. The ink stays currentcolor, so the button's own hover still shows.
+	 * Still under reduced motion, and plain text in forced colours.
+	 */
+	@media (prefers-reduced-motion: no-preference) and (forced-colors: none) {
+		.shimmer {
+			background: linear-gradient(100deg, currentcolor 35%, var(--ss-accent) 50%, currentcolor 65%) 100% 0 / 300% 100%;
+			-webkit-background-clip: text;
+			background-clip: text;
+			-webkit-text-fill-color: transparent;
+			animation: shimmer 3.6s var(--ss-ease-hover) infinite;
+		}
+	}
+
+	@keyframes shimmer {
+		55%,
+		100% {
+			background-position: 0 0;
+		}
 	}
 </style>

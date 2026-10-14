@@ -1,6 +1,6 @@
 <h1><img src="static/logo.svg" alt="Things" height="56"></h1>
 
-Make one hard decision with six classic frameworks. Enter the decision and its options once, switch between models, and compare their estimates side by side on a scoreboard. The map puts everything the models hold in one picture, linked to the options, and edits it in place.
+Make one hard decision with six classic frameworks. Enter the decision and its options once, switch between models, and compare their estimates side by side on a scoreboard. Each model also has a map: what it holds, laid out around the options and linked to them, and edited in place.
 
 Local-first: no backend, no account, no analytics. Everything lives in your browser's `localStorage` (key `things:v1`).
 
@@ -17,21 +17,28 @@ Each model also reports a **lean** (its pick, if there's no tie), a **confidence
 
 The **verdict** names the option with the highest average across filled models and how many models agree with it. Confidence is high when 3+ models are filled, ≥75% agree, and the lead is ≥10 points. It is medium with 2+ models, ≥50% agreement, and a lead ≥5. Otherwise it is low. **Copy Markdown** exports the table, the verdict, and each model's summary.
 
-**Demo:** on a blank decision the topbar button reads **Load demo**. It loads one real decision with every model filled in: a senior backend engineer in Thao Dien (Thu Duc), Ho Chi Minh City, weighing a S$9,500-a-month offer from a payments company in Singapore against 60 million VND at home, with parents in Go Vap and a partner who would need a work pass of their own. Singapore leads (avg 65), 4 of 6 models agree, medium confidence; the Matrix and the Pre-mortem side with staying. Once anything is written, the same button reads **New decision**, and it asks before clearing. The figures are public ones as of October 2026 (`src/lib/core/demo.ts` lists them):
+**Demo:** on a blank decision the topbar button reads **Load demo**, with a soft accent sheen drifting through the label to invite a first try (still under reduced motion). It loads one real decision with every model filled in: a senior backend engineer in Thao Dien (Thu Duc), Ho Chi Minh City, weighing a S$9,500-a-month offer from a payments company in Singapore against 60 million VND at home, with parents in Go Vap and a partner who would need a work pass of their own. Singapore leads (avg 65), 4 of 6 models agree, medium confidence; the Matrix and the Pre-mortem side with staying. Once anything is written, the same button reads **New decision**, and it asks before clearing. The figures are public ones as of October 2026 (`src/lib/core/demo.ts` lists them):
 
 - Senior engineer pay: 40–60 million VND a month in HCMC ([ITviec-based guides](https://employsome.sda.company/?p=6791)), S$9,000–15,000 in Singapore ([Second Talent](https://www.secondtalent.com/developer-rate-card/singapore/), [Kaopiz](https://kaopiz.com/en/articles/software-developer-salary-singapore/)).
 - Employment Pass minimum for new applicants: S$5,600, rising to S$6,000 in 2027 ([BritCham, Budget 2026](https://britcham.org.sg/news/budget-2026-salary-threshold-new-employment-pass-applicants-be-raised-6000-2027)).
 - One-bedroom rent: S$3,300 (transactions, [EdgeProp](https://buddy.edgeprop.sg/discover/what-are-the-typical-monthly-rental-prices-for-a-1-bedroom-condominium-in-affordable-areas-like-8852eee9-df48-4dd8-b7fc-f2b14cad5e95)) to S$4,200 (listings, [Cove](https://blog.cove.sg/cost-to-rent-in-singapore/)) in Singapore; 12–22 million VND in Thao Dien ([AffordWhere](https://affordwhere.com/vietnam/ho-chi-minh/neighborhood/district-2-thao-dien)).
 - SGN–SIN: about 2h20m, budget fares around 3 million VND return ([HappyFares](https://www.happyfares.in/flights/ho-chi-minh-city-singapore-cheap-airtickets)); about 20,500 VND to the Singapore dollar ([OFX](https://www.ofx.com/en-us/exchange-rates/sgd-to-vnd/)).
 
-The **map** (the first tab, its icon alone, before the models) lays out what the models hold around the options:
+The **map** toggle (the icon before the tabs) shows each model's map in place of its form, and stays on as you switch models:
 
-- Fishbone's problem sits at the top.
-- Items that span options sit in a band, with a line to each option they link to, such as a cause and the options that resolve it. A cause no option resolves is dashed and says so.
-- Under each option, with its average: what speaks for it (pros), against it (cons, failure reasons), then its score on each criterion.
+| Model | Its map |
+| --- | --- |
+| Six Thinking Hats | each option's six ratings; the black hat (risks) counts against it |
+| Weighted Decision Matrix | each criterion, with the option's score on it |
+| Pros/Cons + 10-10-10 | the option's pros, cons, and how you'll feel in 10 minutes, months and years |
+| Pre-mortem | the option's failure reasons |
+| Fishbone | the problem on top; the causes in a band, with a line to each option that resolves them (a cause no option resolves is dashed) |
+| Regret / Coin Flip | the five-year regret answer on top; each flip under the option it landed on, green if you were relieved, red if disappointed |
+
+- Each option shows the model's score for it, its pick in bold.
 - Hovering or focusing an item in the band lights its lines and options; hovering an option lights what it shares.
-- Tap an item to edit it in a sheet with the same inputs its model uses, remove it, or open its model. **Add** on an option or on the band adds a pro, con, failure reason, cause or criterion. A cause added under an option is resolved by it.
-- It is the same data as the panels: an edit on the map shows in the model and the scoreboard at once.
+- Tap anything to edit it in a sheet with the same inputs the form uses, or remove a list item. **Add** on an option or on the band adds what the model lists there; a cause added under an option is resolved by it.
+- It is the same data as the form: an edit on the map shows in the form and the scoreboard at once.
 - On a phone the options stack, and the links read as text instead of lines.
 
 ## Design
@@ -50,7 +57,7 @@ The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotus
   - If neither works, the build warns and uses Newsreader italic, the SS fallback.
 - **Components** (used as SS ships them):
   - `.ss-topbar` and the `.ss-mode` disc that turns into a crescent (`modeIcon()`, `initMode`/`toggleMode`).
-  - `.ss-chip` for options and `.ss-segment` for the tabs (the map, then the models) and choices of up to three states; larger choices use a menu.
+  - `.ss-chip` for options and `.ss-segment` for the model tabs, the map toggle (one pressed button) and choices of up to three states; larger choices use a menu.
   - `.ss-input` underlines, `.ss-check`, `.ss-btn`, and `.ss-note` for each model's estimate (tip/info/warning for high/medium/low confidence).
   - `.ss-swap` for the scoreboard toggle and the copy button (copy turns to a check), `.ss-tip`, `.ss-toast` and `.ss-dot`.
   - The map's sheet is a `<dialog class="ss-pop ss-move up">` (it rises and blurs the page behind), with an `.ss-menu` of what to add.
@@ -59,7 +66,8 @@ The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotus
 - **Motion:**
   - The header rises once on load (`.ss-enter`), and the scoreboard table opens in place (`.ss-move.tall`).
   - Switching models: the tabs' highlight is one pill that slides to the new tab (`--ss-dur-small`, `--ss-ease-out`). The panel fades through, as a View Transition (`src/lib/switch.ts`): the old one out over `--ss-dur-micro`, the new one in over `--ss-dur-enter`. Without View Transitions it switches at once.
-  - Opening the map is the same: the pill slides to the map's tab, the panel fades out and the map fades in where it stands, so nothing slides.
+  - Turning the map on or off is the same fade: a model's form and its map trade places where they stand, so nothing slides. Loading the demo or starting over fades too.
+  - **Load demo** has a soft text shimmer: an accent sheen passes through the label every few seconds (`--ss-ease-hover`); none under reduced motion or forced colours.
   - Hovers are the one SS motion and sit under `(hover: hover)`.
   - Under reduced motion nothing moves: the pill jumps, the sheet only fades, and only the fades between screens remain.
 - **Mode:** follows the system. A choice of the other mode is kept in `localStorage`, as SS does.
@@ -111,7 +119,7 @@ src/
       schema.ts                field builders, Values<> type inference, normalizeInputs()
       model.ts                 Model interface, defineModel(), lean/confidence helpers
       scoreboard.ts            averages, agreement, verdict
-      map.ts                   the decision map, read generically from every model's schema and inputs
+      map.ts                   a model's map, read generically from its schema and inputs
       demo.ts                  the demo decision: raw inputs per model, normalized on load
       markdown.ts              Markdown export
       decision.ts              new/parse decision
@@ -133,9 +141,9 @@ interface Model {
 
 | Builder | Value | Renders as |
 | --- | --- | --- |
-| `field.number(key, label, { min, max, step?, default, ends?, signed?, help? })` | `number` | slider |
+| `field.number(key, label, { min, max, step?, default, ends?, signed?, help?, map? })` | `number` | slider |
 | `field.text(key, label, { placeholder?, multiline?, map? })` | `string` | input / textarea |
-| `field.choice(key, label, choices \| (decision) => choices, { default })` | `string` (`''` = unanswered) | pill radio group |
+| `field.choice(key, label, choices \| (decision) => choices, { default, map? })` | `string` (`''` = unanswered) | pill radio group |
 | `field.optionSet(key, label)` | `OptionId[]` | checkbox per decision option |
 | `field.hidden(key, default)` | any JSON | nothing (stored only) |
 | `field.group(key, label, fields)` | object | fieldset |
@@ -144,16 +152,20 @@ interface Model {
 
 `list.create(ctx)` seeds new items, and it can be random (the coin flip uses it). `list.itemTitle(item, i, decision)` sets each item's heading.
 
-`map` puts a field on the decision map (`core/map.ts`). On a list it is `{ label, tone? }`: `label` names the item's text field (TypeScript only accepts a text field), and `tone` is `'for'` or `'against'` its option. Where the list sits says what each item belongs to:
+`map` puts a field on its model's map (`core/map.ts`); the map's view, sheet and add menu need nothing else.
 
-| The list… | On the map | Example |
-| --- | --- | --- |
-| sits in a `perOption` field | under that option | Pros, Cons, Failure reasons |
-| has an `optionSet` field | in the shared band, with a line to each option it names | Causes |
-| has a `perOption` field | under every option, with that option's first number | Criteria |
-| has neither | in the shared band, linked to nothing | |
+- On a list it is `{ label, tone?, toneOf?, at? }`. `label` names the item's words, one of its text or choice fields. `tone` is `'for'` or `'against'` its option, or `toneOf(item)` decides per item. `at` names a hidden field holding an option id. TypeScript checks each name against the item's fields. Where the list sits says what each item belongs to:
 
-`map: true` on a top-level text field shows it at the top of the map (Fishbone's problem).
+  | The list… | On the map | Example |
+  | --- | --- | --- |
+  | sits in a `perOption` field | under that option | Pros, Cons, Failure reasons |
+  | has `at` | under the option it names | Flips, where the coin landed |
+  | has an `optionSet` field | in the shared band, with a line to each option it names | Causes |
+  | has a `perOption` field | under every option, with that option's first number | Criteria |
+  | has none of these | in the shared band, linked to nothing | |
+
+- `map: true` (or `{ tone }`) on a number inside a `perOption` field shows it under that option with its value: the hats, the 10-10-10 feelings.
+- `map: true` on a top-level text or choice field shows it at the top of the map: Fishbone's problem, Coin's regret.
 
 ## How to add a model
 
@@ -215,7 +227,7 @@ describe('gut check', () => {
 export const models = [sixHats, matrix, prosCons, premortem, fishbone, coinFlip, gutCheck];
 ```
 
-That's it. The model gets a tab, an input panel, a scoreboard column, and a Markdown column. It starts empty in the demo; to fill it there, add its raw inputs under its id in `src/lib/core/demo.ts`. To put its items on the map, give a list a `map` hint (see Schema fields); the map's view, sheet and add menu need nothing else. It is also covered by `registry.test.ts`, which fuzzes every registered model with random valid inputs for 2, 3, and 5 options and checks the result: one score per option, all in 0–100, a valid lean, and a summary.
+That's it. The model gets a tab, an input panel, a scoreboard column, and a Markdown column. It starts empty in the demo; to fill it there, add its raw inputs under its id in `src/lib/core/demo.ts`. To give it a map, add `map` hints to its fields (see Schema fields). It is also covered by `registry.test.ts`, which fuzzes every registered model with random valid inputs for 2, 3, and 5 options and checks the result: one score per option, all in 0–100, a valid lean, and a summary.
 
 Guidelines:
 
@@ -228,9 +240,9 @@ Guidelines:
 
 - `npm run check`: 0 errors, 0 warnings (strict, `noUncheckedIndexedAccess`).
 - `npm run lint`: ESLint and knip clean.
-- `npm test`: 78 tests across 12 files.
+- `npm test`: 81 tests across 12 files.
 - Lighthouse (mobile, production build): Performance 98, Accessibility 100, Best Practices 100, SEO 100.
-- axe: no violations on any model, or on the map with its add menu or an item's sheet open, at 380px and 1100px, in light and dark.
-- Browser checks (Playwright, production build): end to end, motion and reduced motion, the map's add, edit, remove, links, keyboard and phone layout. No console errors or warnings.
+- axe: no violations on any model's form or map (with the demo loaded), or with the map's add menu or an item's sheet open, at 380px and 1100px, in light and dark.
+- Browser checks (Playwright, production build): end to end, motion and reduced motion, the demo, every model's map, the map's add, edit, remove, links, keyboard and phone layout, the shimmer. No console errors or warnings.
 - Keyboard: arrow keys, Home and End move through the tabs; every control is native (range, radio, checkbox, button) and has a visible `:focus-visible` ring. Scoreboard cells are buttons that jump to their model.
 - Works at 380px wide with no horizontal page scroll. The tab bar and scoreboard scroll inside their own containers.

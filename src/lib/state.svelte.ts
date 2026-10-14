@@ -1,6 +1,6 @@
 import { isBlank, newDecision, newOption, parseDecision } from './core/decision';
 import { demo } from './core/demo';
-import { decisionMap, listAt, type ListRef, type MapAdd } from './core/map';
+import { listAt, type MapAdd, type MapItem } from './core/map';
 import { toMarkdown } from './core/markdown';
 import { models } from './core/models';
 import { createItem, normalizeInputs } from './core/schema';
@@ -12,8 +12,8 @@ const STORAGE_KEY = 'things:v1';
 
 type Inputs = Record<string, unknown>;
 
-/** The model panels, or the decision map. */
-export type View = 'models' | 'map';
+/** Each model's form, or its map. */
+export type View = 'form' | 'map';
 
 interface Saved {
 	decision: Decision;
@@ -30,7 +30,7 @@ const normalized = (raw: Record<string, unknown>, d: Decision): Record<ModelId, 
 
 function fresh(): Saved {
 	const decision = newDecision();
-	return { decision, inputs: normalized({}, decision), touched: {}, active: models[0]!.id, view: 'models' };
+	return { decision, inputs: normalized({}, decision), touched: {}, active: models[0]!.id, view: 'form' };
 }
 
 function load(): Saved {
@@ -45,7 +45,7 @@ function load(): Saved {
 			inputs: normalized(inputs, decision),
 			touched: Object.fromEntries(models.map((m) => [m.id, touched[m.id] === true])),
 			active: models.find((m) => m.id === raw.active)?.id ?? models[0]!.id,
-			view: raw.view === 'map' ? 'map' : 'models'
+			view: raw.view === 'map' ? 'map' : 'form'
 		};
 	} catch {
 		return fresh();
@@ -81,8 +81,6 @@ class DecisionStore {
 	/** Nothing entered yet: the topbar offers the demo rather than a new decision. */
 	blank = $derived(isBlank(this.decision) && !Object.values(this.touched).some(Boolean));
 
-	map = $derived(decisionMap(this.decision, models, this.inputs));
-
 	canAddOption = $derived(this.decision.options.length < MAX_OPTIONS);
 	canRemoveOption = $derived(this.decision.options.length > MIN_OPTIONS);
 
@@ -112,22 +110,22 @@ class DecisionStore {
 		this.touched[id] = false;
 	}
 
-	/** Add an item from the map, linked to its option when the list links; returns its id. */
+	/** Add an item from a model's map, linked to its option when the list links; returns its id. */
 	addItem(add: MapAdd): string | undefined {
-		const list = listAt(this.inputs[add.ref.model], add.ref.path);
-		if (!list || list.length >= (add.field.max ?? Infinity)) return;
-		const item = createItem(add.field, $state.snapshot(this.decision), $state.snapshot(list));
+		const list = listAt(this.inputs, add.path);
+		if (!list || list.length >= (add.list.max ?? Infinity)) return;
+		const item = createItem(add.list, $state.snapshot(this.decision), $state.snapshot(list));
 		list.push(add.link ? { ...item, [add.link.key]: [add.link.option] } : item);
-		this.touch(add.ref.model);
+		this.touch(add.model);
 		return item.id;
 	}
 
-	removeItem(ref: ListRef, id: string) {
-		const list = listAt(this.inputs[ref.model], ref.path);
-		const i = list?.findIndex((item) => item.id === id) ?? -1;
+	removeItem(item: Pick<MapItem, 'model' | 'path' | 'id'>) {
+		const list = listAt(this.inputs, item.path);
+		const i = list?.findIndex((x) => x.id === item.id) ?? -1;
 		if (i < 0) return;
 		list!.splice(i, 1);
-		this.touch(ref.model);
+		this.touch(item.model);
 	}
 
 	startOver() {

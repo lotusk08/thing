@@ -38,10 +38,10 @@ async function show(to: Screen): Promise<void> {
 	}
 }
 
-/** Show a model's panel, from the tabs, the scoreboard or the map. */
-export const switchModel = (id: ModelId) => show({ view: 'models', active: id });
+/** Show another model, as its form or its map, whichever is on. */
+export const switchModel = (id: ModelId) => show({ view: (next ?? store).view, active: id });
 
-/** Show the model panels or the decision map. */
+/** Show each model's form, or its map. */
 export const switchView = (view: View) => show({ view, active: (next ?? store).active });
 
 /** Put another decision in place (a new one, or the demo), fading like a switch. */

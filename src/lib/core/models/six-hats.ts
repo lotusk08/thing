@@ -2,7 +2,7 @@ import { confidenceFromMargin, defineModel, leanOf, marginOf, ranked, score100 }
 import { field } from '../schema';
 import { optionLabel, sum } from '../util';
 
-const rate = { min: 1, max: 5, step: 1, default: 3 } as const;
+const rate = { min: 1, max: 5, step: 1, default: 3, map: true } as const;
 
 export const sixHats = defineModel({
 	id: 'six-hats',
@@ -23,7 +23,7 @@ export const sixHats = defineModel({
 		field.perOption('hats', 'Rate each option', [
 			field.number('white', 'White · facts', { ...rate, help: 'How well do facts and data support it?', ends: ['weak', 'strong'] }),
 			field.number('red', 'Red · gut feeling', { ...rate, help: 'Your emotional reaction.', ends: ['dread', 'excited'] }),
-			field.number('black', 'Black · risks', { ...rate, help: 'How serious are the downsides? Higher counts against it.', ends: ['minor', 'severe'] }),
+			field.number('black', 'Black · risks', { ...rate, map: { tone: 'against' }, help: 'How serious are the downsides? Higher counts against it.', ends: ['minor', 'severe'] }),
 			field.number('yellow', 'Yellow · benefits', { ...rate, help: 'How big is the upside?', ends: ['small', 'big'] }),
 			field.number('green', 'Green · ideas', { ...rate, help: 'Does it open new possibilities?', ends: ['few', 'many'] }),
 			field.number('blue', 'Blue · process', { ...rate, help: 'Does it fit your goals, plan and constraints?', ends: ['poorly', 'well'] })

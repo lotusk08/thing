@@ -25,6 +25,8 @@ export interface NumberField<K extends string = string> extends Base<K> {
 	ends?: readonly [string, string];
 	/** Show "+" on positive values (signed scales like −5..+5). */
 	signed?: boolean;
+	/** In a perOption field: shown on the model's map under that option, with its value. */
+	map?: true | { tone: Tone };
 }
 
 export interface TextField<K extends string = string> extends Base<K> {
@@ -32,7 +34,7 @@ export interface TextField<K extends string = string> extends Base<K> {
 	default?: string;
 	placeholder?: string;
 	multiline?: boolean;
-	/** At the top level of a model's inputs: shown on the decision map under the decision. */
+	/** At the top level of a model's inputs: shown at the top of the model's map. */
 	map?: boolean;
 }
 
@@ -46,6 +48,8 @@ export interface ChoiceField<K extends string = string, V extends string = strin
 	choices: readonly Choice<V>[] | ((decision: Decision) => readonly Choice<V>[]);
 	/** '' means "not answered yet". */
 	default: V | '';
+	/** At the top level of a model's inputs: shown at the top of the model's map. */
+	map?: boolean;
 }
 
 /** Multi-select over the decision's options. Value: OptionId[]. */
@@ -90,16 +94,23 @@ export interface ListField<K extends string = string, C extends Fields = Fields>
 	create?(ctx: ListContext<C>): Partial<Values<C>>;
 	/** Heading for an item; defaults to "{itemLabel} {n}". */
 	itemTitle?(item: Item<C>, index: number, decision: Decision): string;
-	/** Put the items on the decision map (core/map.ts). */
+	/** Put the items on the model's map (core/map.ts). */
 	map?: MapHint<C>;
 }
 
-/** How a list's items show on the decision map. */
+/** Whether something speaks for or against its option. */
+export type Tone = 'for' | 'against';
+
+/** How a list's items show on the model's map. */
 interface MapHint<C extends Fields> {
-	/** The item's text field the map shows. */
-	label: Extract<C[number], { kind: 'text' }>['key'];
-	/** Whether an item speaks for or against its option; neither when left out. */
-	tone?: 'for' | 'against';
+	/** The item's words: one of its text or choice fields. */
+	label: Extract<C[number], { kind: 'text' | 'choice' }>['key'];
+	/** For or against its option; neither when left out. */
+	tone?: Tone;
+	/** Or per item, e.g. from a reaction. */
+	toneOf?(item: Item<C>): Tone | undefined;
+	/** A field holding an option id: the item sits under that option (where a coin landed). */
+	at?: Extract<C[number], { kind: 'hidden' }>['key'];
 }
 
 export type Field =
@@ -149,7 +160,7 @@ export const field = {
 		key: K,
 		label: string,
 		choices: readonly Choice<V>[] | ((decision: Decision) => readonly Choice<V>[]),
-		o: { default: NoInfer<V> | ''; help?: string }
+		o: { default: NoInfer<V> | ''; help?: string; map?: boolean }
 	): ChoiceField<K, V> => ({ kind: 'choice', key, label, choices, ...o }),
 	optionSet: <const K extends string>(key: K, label: string, o: { help?: string } = {}): OptionSetField<K> => ({
 		kind: 'optionSet',

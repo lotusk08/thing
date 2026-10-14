@@ -148,11 +148,10 @@ select.ss-input option {
  * Switching (src/lib/switch.ts) is a View Transition, SS's native motion. A model's
  * panel fades through: the old one out over --ss-dur-micro, the new one in over
  * --ss-dur-enter on --ss-ease-quint from halfway through that, so two unrelated
- * panels never read on top of each other. What only leaves or only arrives (the
- * map, or the tabs and panel, between Models and Map) fades the same way where it
- * stands, so nothing slides. Fades only, so they stay under reduced motion too. The
- * tabs and the scoreboard are groups of their own shown live while they stay: the
- * sliding pill is not drawn twice, and the sticky bar stays on top.
+ * panels never read on top of each other; a model's form and its map trade places
+ * the same way, as does one decision for another. Fades only, so they stay under
+ * reduced motion too. The tabs and the scoreboard are groups of their own shown
+ * live: the sliding pill is not drawn twice, and the sticky bar stays on top.
  */
 ::view-transition-group(panel) {
 	animation-duration: var(--ss-dur-enter);
@@ -175,15 +174,6 @@ select.ss-input option {
 ::view-transition-new(tabs),
 ::view-transition-new(board) {
 	animation: none;
-}
-
-::view-transition-old(*):only-child {
-	display: block;
-	animation: var(--ss-dur-micro) ease both switch-out;
-}
-
-::view-transition-new(*):only-child {
-	animation: var(--ss-dur-enter) var(--ss-ease-quint) calc(var(--ss-dur-micro) / 2) both switch-in;
 }
 
 @keyframes switch-out {
