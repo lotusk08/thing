@@ -20,7 +20,7 @@ export const fishbone = defineModel({
 	description:
 		'Start from the problem, not the options. Map its causes across six categories, then mark which options would fix each cause.',
 	inputsSchema: [
-		field.text('problem', 'Problem to solve', { placeholder: 'e.g. I feel stuck in my career', multiline: true }),
+		field.text('problem', 'Problem to solve', { placeholder: 'e.g. I feel stuck in my career', multiline: true, map: true }),
 		field.list(
 			'causes',
 			'Causes',
@@ -39,7 +39,7 @@ export const fishbone = defineModel({
 				),
 				field.optionSet('addressedBy', 'Resolved by')
 			],
-			{ itemLabel: 'Cause', addLabel: 'Add cause', max: 30 }
+			{ itemLabel: 'Cause', addLabel: 'Add cause', max: 30, map: { label: 'text' } }
 		)
 	],
 	/**

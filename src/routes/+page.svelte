@@ -10,10 +10,12 @@
 	import { initMode, toggleMode } from 'ss/mode';
 	import { onMount } from 'svelte';
 	import DecisionHeader from '$lib/components/DecisionHeader.svelte';
+	import DecisionMap from '$lib/components/DecisionMap.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import ModelPanel from '$lib/components/ModelPanel.svelte';
 	import ModelTabs from '$lib/components/ModelTabs.svelte';
 	import Scoreboard from '$lib/components/Scoreboard.svelte';
+	import ViewSwitch from '$lib/components/ViewSwitch.svelte';
 	import Wordmark from '$lib/components/Wordmark.svelte';
 	import { store } from '$lib/state.svelte';
 	import { switchModel } from '$lib/switch';
@@ -59,10 +61,15 @@
 
 	<main class="wrap">
 		<DecisionHeader />
-		<ModelTabs />
-		{#key store.active}
-			<ModelPanel model={store.activeModel} />
-		{/key}
+		<ViewSwitch />
+		{#if store.view === 'map'}
+			<DecisionMap />
+		{:else}
+			<ModelTabs />
+			{#key store.active}
+				<ModelPanel model={store.activeModel} />
+			{/key}
+		{/if}
 	</main>
 </div>
 <Scoreboard onjump={jump} />

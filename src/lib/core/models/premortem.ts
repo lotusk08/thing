@@ -20,7 +20,7 @@ export const premortem = defineModel({
 					field.number('likelihood', 'Likelihood', { ...scale, ends: ['rare', 'likely'] }),
 					field.number('severity', 'Severity', { ...scale, ends: ['minor', 'disaster'] })
 				],
-				{ itemLabel: 'Failure', addLabel: 'Add failure reason', inline: true }
+				{ itemLabel: 'Failure', addLabel: 'Add failure reason', inline: true, map: { label: 'reason', tone: 'against' } }
 			)
 		])
 	],

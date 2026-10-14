@@ -21,7 +21,7 @@ export const matrix = defineModel({
 					field.number('score', 'Score', { min: 1, max: 10, step: 1, default: 5, ends: ['poor', 'excellent'] })
 				])
 			],
-			{ itemLabel: 'Criterion', addLabel: 'Add criterion', max: 7 }
+			{ itemLabel: 'Criterion', addLabel: 'Add criterion', max: 7, map: { label: 'name' } }
 		)
 	],
 	compute(decision, { criteria }) {

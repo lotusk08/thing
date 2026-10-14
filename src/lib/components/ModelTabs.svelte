@@ -143,24 +143,8 @@
 
 	.ss-segment button {
 		position: relative;
-		display: inline-flex;
 		flex: none;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
 		white-space: nowrap;
-	}
-
-	.ss-segment button {
-		transition:
-			color var(--ss-dur-hover) var(--ss-ease-hover),
-			background var(--ss-dur-hover) var(--ss-ease-hover);
-	}
-
-	@media (hover: hover) {
-		.ss-segment button:hover {
-			color: var(--ss-tx);
-		}
 	}
 
 	.ss-segment button[aria-selected='true'] {
@@ -171,12 +155,6 @@
 	/* Once the sliding pill is placed it is the highlight; the button's own fill is the no-script look. */
 	.ss-segment.measured button[aria-selected='true'] {
 		background: none;
-	}
-
-	@media (pointer: coarse) {
-		.ss-segment button {
-			min-height: var(--ss-tap-target);
-		}
 	}
 
 	.filled {

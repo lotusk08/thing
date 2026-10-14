@@ -32,6 +32,8 @@ export interface TextField<K extends string = string> extends Base<K> {
 	default?: string;
 	placeholder?: string;
 	multiline?: boolean;
+	/** At the top level of a model's inputs: shown on the decision map under the decision. */
+	map?: boolean;
 }
 
 interface Choice<V extends string = string> {
@@ -88,6 +90,16 @@ export interface ListField<K extends string = string, C extends Fields = Fields>
 	create?(ctx: ListContext<C>): Partial<Values<C>>;
 	/** Heading for an item; defaults to "{itemLabel} {n}". */
 	itemTitle?(item: Item<C>, index: number, decision: Decision): string;
+	/** Put the items on the decision map (core/map.ts). */
+	map?: MapHint<C>;
+}
+
+/** How a list's items show on the decision map. */
+interface MapHint<C extends Fields> {
+	/** The item's text field the map shows. */
+	label: Extract<C[number], { kind: 'text' }>['key'];
+	/** Whether an item speaks for or against its option; neither when left out. */
+	tone?: 'for' | 'against';
 }
 
 export type Field =

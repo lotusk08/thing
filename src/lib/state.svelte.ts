@@ -1,8 +1,9 @@
 import { newDecision, newOption, parseDecision } from './core/decision';
+import { decisionMap, listAt, type ListRef, type MapAdd } from './core/map';
 import { toMarkdown } from './core/markdown';
 import type { AnyModel } from './core/model';
 import { models } from './core/models';
-import { normalizeInputs } from './core/schema';
+import { createItem, normalizeInputs } from './core/schema';
 import { buildScoreboard } from './core/scoreboard';
 import { MAX_OPTIONS, MIN_OPTIONS, type Decision, type Estimate, type ModelId, type OptionId } from './core/types';
 import { isRecord } from './core/util';
@@ -11,12 +12,16 @@ const STORAGE_KEY = 'things:v1';
 
 type Inputs = Record<string, unknown>;
 
+/** The model panels, or the decision map. */
+export type View = 'models' | 'map';
+
 interface Saved {
 	decision: Decision;
 	inputs: Record<ModelId, Inputs>;
 	/** Models the user has interacted with; untouched models show an empty scoreboard column. */
 	touched: Record<ModelId, boolean>;
 	active: ModelId;
+	view: View;
 }
 
 const defaults = (m: AnyModel, d: Decision) => normalizeInputs(m.inputsSchema, undefined, d);
@@ -27,7 +32,8 @@ function fresh(): Saved {
 		decision,
 		inputs: Object.fromEntries(models.map((m) => [m.id, defaults(m, decision)])),
 		touched: {},
-		active: models[0]!.id
+		active: models[0]!.id,
+		view: 'models'
 	};
 }
 
@@ -44,7 +50,8 @@ function load(): Saved {
 				models.map((m) => [m.id, normalizeInputs(m.inputsSchema, inputs[m.id], decision)])
 			),
 			touched: Object.fromEntries(models.map((m) => [m.id, touched[m.id] === true])),
-			active: models.find((m) => m.id === raw.active)?.id ?? models[0]!.id
+			active: models.find((m) => m.id === raw.active)?.id ?? models[0]!.id,
+			view: raw.view === 'map' ? 'map' : 'models'
 		};
 	} catch {
 		return fresh();
@@ -58,6 +65,7 @@ class DecisionStore {
 	inputs = $state<Record<ModelId, Inputs>>(initial.inputs);
 	touched = $state<Record<ModelId, boolean>>(initial.touched);
 	active = $state<ModelId>(initial.active);
+	view = $state<View>(initial.view);
 
 	readonly models = models;
 
@@ -75,6 +83,8 @@ class DecisionStore {
 	});
 
 	board = $derived(buildScoreboard(this.decision, models, this.estimates));
+
+	map = $derived(decisionMap(this.decision, models, this.inputs));
 
 	canAddOption = $derived(this.decision.options.length < MAX_OPTIONS);
 	canRemoveOption = $derived(this.decision.options.length > MIN_OPTIONS);
@@ -105,6 +115,24 @@ class DecisionStore {
 		this.touched[id] = false;
 	}
 
+	/** Add an item from the map, linked to its option when the list links; returns its id. */
+	addItem(add: MapAdd): string | undefined {
+		const list = listAt(this.inputs[add.ref.model], add.ref.path);
+		if (!list || list.length >= (add.field.max ?? Infinity)) return;
+		const item = createItem(add.field, $state.snapshot(this.decision), $state.snapshot(list));
+		list.push(add.link ? { ...item, [add.link.key]: [add.link.option] } : item);
+		this.touch(add.ref.model);
+		return item.id;
+	}
+
+	removeItem(ref: ListRef, id: string) {
+		const list = listAt(this.inputs[ref.model], ref.path);
+		const i = list?.findIndex((item) => item.id === id) ?? -1;
+		if (i < 0) return;
+		list!.splice(i, 1);
+		this.touch(ref.model);
+	}
+
 	startOver() {
 		const f = fresh();
 		this.decision = f.decision;
@@ -125,7 +153,8 @@ class DecisionStore {
 					decision: this.decision,
 					inputs: this.inputs,
 					touched: this.touched,
-					active: this.active
+					active: this.active,
+					view: this.view
 				});
 				try {
 					localStorage.setItem(STORAGE_KEY, json);

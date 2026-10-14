@@ -70,7 +70,7 @@
 					<span><strong>{optionLabel(store.decision, verdict.leader)}</strong> leads</span>
 					<span class="part"><span class="ss-dot"></span><span class="ss-figure">avg {Math.round(leaderAverage)}</span></span>
 					<span class="part"><span class="ss-dot"></span>{verdict.agree} of {plural(verdict.filled, 'model')} agree</span>
-					<span class="part confidence"><span class="ss-dot"></span><i class={NOTES[verdict.confidence].type}></i>{verdict.confidence} confidence</span>
+					<span class="part confidence"><span class="ss-dot"></span><i class="pip {NOTES[verdict.confidence].type}"></i>{verdict.confidence} confidence</span>
 				{:else}
 					<span><strong>{verdict.tied.map((id) => optionLabel(store.decision, id)).join(' and ')}</strong> are tied</span>
 					<span class="part"><span class="ss-dot"></span>{plural(verdict.filled, 'model')}</span>
@@ -194,23 +194,8 @@
 		white-space: nowrap;
 	}
 
-	.confidence i {
-		width: 6px;
-		height: 6px;
+	.confidence .pip {
 		margin-right: 6px;
-		border-radius: 50%;
-	}
-
-	.confidence .tip {
-		background: var(--ss-tip);
-	}
-
-	.confidence .info {
-		background: var(--ss-info);
-	}
-
-	.confidence .warning {
-		background: var(--ss-warning);
 	}
 
 	/* The copy button sits at the right edge: anchor its tooltip (and its growth) there. */

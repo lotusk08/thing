@@ -1,6 +1,6 @@
 <h1><img src="static/logo.svg" alt="Things" height="56"></h1>
 
-Make one hard decision with six classic frameworks. Enter the decision and its options once, switch between models, and compare their estimates side by side on a scoreboard.
+Make one hard decision with six classic frameworks. Enter the decision and its options once, switch between models, and compare their estimates side by side on a scoreboard. The map puts everything the models hold in one picture, linked to the options, and edits it in place.
 
 Local-first: no backend, no account, no analytics. Everything lives in your browser's `localStorage` (key `things:v1`).
 
@@ -16,6 +16,16 @@ Local-first: no backend, no account, no analytics. Everything lives in your brow
 Each model also reports a **lean** (its pick, if there's no tie), a **confidence** (mainly from the gap between the top two options, capped when inputs are thin), and a one-line **summary**.
 
 The **verdict** names the option with the highest average across filled models and how many models agree with it. Confidence is high when 3+ models are filled, ≥75% agree, and the lead is ≥10 points. It is medium with 2+ models, ≥50% agreement, and a lead ≥5. Otherwise it is low. **Copy Markdown** exports the table, the verdict, and each model's summary.
+
+The **map** (the Models / Map switch) lays out what the models hold around the options:
+
+- Fishbone's problem sits at the top.
+- Items that span options sit in a band, with a line to each option they link to, such as a cause and the options that resolve it. A cause no option resolves is dashed and says so.
+- Under each option, with its average: what speaks for it (pros), against it (cons, failure reasons), then its score on each criterion.
+- Hovering or focusing an item in the band lights its lines and options; hovering an option lights what it shares.
+- Tap an item to edit it in a sheet with the same inputs its model uses, remove it, or open its model. **Add** on an option or on the band adds a pro, con, failure reason, cause or criterion. A cause added under an option is resolved by it.
+- It is the same data as the panels: an edit on the map shows in the model and the scoreboard at once.
+- On a phone the options stack, and the links read as text instead of lines.
 
 ## Design
 
@@ -33,16 +43,18 @@ The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotus
   - If neither works, the build warns and uses Newsreader italic, the SS fallback.
 - **Components** (used as SS ships them):
   - `.ss-topbar` and the `.ss-mode` disc that turns into a crescent (`modeIcon()`, `initMode`/`toggleMode`).
-  - `.ss-chip` for options and `.ss-segment` for the model tabs and choices of up to three states; larger choices use a menu.
+  - `.ss-chip` for options and `.ss-segment` for the Models / Map switch, the model tabs and choices of up to three states; larger choices use a menu.
   - `.ss-input` underlines, `.ss-check`, `.ss-btn`, and `.ss-note` for each model's estimate (tip/info/warning for high/medium/low confidence).
   - `.ss-swap` for the scoreboard toggle and the copy button (copy turns to a check), `.ss-tip`, `.ss-toast` and `.ss-dot`.
+  - The map's sheet is a `<dialog class="ss-pop ss-move up">` (it rises and blurs the page behind), with an `.ss-menu` of what to add.
   - SS line icons, and its solid note icons on the estimates.
 - **Layout:** hairlines instead of cards.
 - **Motion:**
   - The header rises once on load (`.ss-enter`), and the scoreboard table opens in place (`.ss-move.tall`).
   - Switching models: the tabs' highlight is one pill that slides to the new tab (`--ss-dur-small`, `--ss-ease-out`). The panel fades through, as a View Transition (`src/lib/switch.ts`): the old one out over `--ss-dur-micro`, the new one in over `--ss-dur-enter`. Without View Transitions it switches at once.
+  - Switching between Models and Map is the same transition: what leaves fades out and what arrives fades in, each where it stands, so nothing slides.
   - Hovers are the one SS motion and sit under `(hover: hover)`.
-  - Under reduced motion nothing moves: the pill jumps, and only the panel's fade remains.
+  - Under reduced motion nothing moves: the pill jumps, the sheet only fades, and only the fades between screens remain.
 - **Mode:** follows the system. A choice of the other mode is kept in `localStorage`, as SS does.
 - **Contrast:** SS's faint ink (`--ss-tx-3`, 3.2:1) is only used for placeholders and marks. Hints, labels and captions use `--ss-tx-2` so they clear WCAG AA.
 
@@ -82,8 +94,9 @@ src/
   ss.d.ts                      types for the parts of `ss` used (mode, modeIcon)
   lib/
     state.svelte.ts            $state / $derived store, localStorage persistence via $effect
+    switch.ts                  switchModel() / switchView(): every switch is one View Transition
     icons.ts                   the SS icons used, from its single-file SVGs
-    components/                thin UI on SS classes: header, tabs, panel, scoreboard, Icon
+    components/                thin UI on SS classes: header, view switch, tabs, panel, map, sheet, scoreboard
       fields/Fields.svelte     renders ANY inputsSchema (recursive)
       fields/ListInput.svelte
     core/                      plain TS, no Svelte imports
@@ -91,6 +104,7 @@ src/
       schema.ts                field builders, Values<> type inference, normalizeInputs()
       model.ts                 Model interface, defineModel(), lean/confidence helpers
       scoreboard.ts            averages, agreement, verdict
+      map.ts                   the decision map, read generically from every model's schema and inputs
       markdown.ts              Markdown export
       decision.ts              new/parse decision
       testing.ts               test helpers (decision(), run(), seeded rng, randomInputs())
@@ -112,15 +126,26 @@ interface Model {
 | Builder | Value | Renders as |
 | --- | --- | --- |
 | `field.number(key, label, { min, max, step?, default, ends?, signed?, help? })` | `number` | slider |
-| `field.text(key, label, { placeholder?, multiline? })` | `string` | input / textarea |
+| `field.text(key, label, { placeholder?, multiline?, map? })` | `string` | input / textarea |
 | `field.choice(key, label, choices \| (decision) => choices, { default })` | `string` (`''` = unanswered) | pill radio group |
 | `field.optionSet(key, label)` | `OptionId[]` | checkbox per decision option |
 | `field.hidden(key, default)` | any JSON | nothing (stored only) |
 | `field.group(key, label, fields)` | object | fieldset |
 | `field.perOption(key, label, fields)` | `Record<OptionId, …>` | one card per option |
-| `field.list(key, label, fields, { itemLabel, addLabel?, max?, inline?, create?, itemTitle? })` | `Array<{ id } & …>` | add/remove list |
+| `field.list(key, label, fields, { itemLabel, addLabel?, max?, inline?, create?, itemTitle?, map? })` | `Array<{ id } & …>` | add/remove list |
 
 `list.create(ctx)` seeds new items, and it can be random (the coin flip uses it). `list.itemTitle(item, i, decision)` sets each item's heading.
+
+`map` puts a field on the decision map (`core/map.ts`). On a list it is `{ label, tone? }`: `label` names the item's text field (TypeScript only accepts a text field), and `tone` is `'for'` or `'against'` its option. Where the list sits says what each item belongs to:
+
+| The list… | On the map | Example |
+| --- | --- | --- |
+| sits in a `perOption` field | under that option | Pros, Cons, Failure reasons |
+| has an `optionSet` field | in the shared band, with a line to each option it names | Causes |
+| has a `perOption` field | under every option, with that option's first number | Criteria |
+| has neither | in the shared band, linked to nothing | |
+
+`map: true` on a top-level text field shows it at the top of the map (Fishbone's problem).
 
 ## How to add a model
 
@@ -182,7 +207,7 @@ describe('gut check', () => {
 export const models = [sixHats, matrix, prosCons, premortem, fishbone, coinFlip, gutCheck];
 ```
 
-That's it. The model gets a tab, an input panel, a scoreboard column, and a Markdown column. It is also covered by `registry.test.ts`, which fuzzes every registered model with random valid inputs for 2, 3, and 5 options and checks the result: one score per option, all in 0–100, a valid lean, and a summary.
+That's it. The model gets a tab, an input panel, a scoreboard column, and a Markdown column. To put its items on the map, give a list a `map` hint (see Schema fields); the map's view, sheet and add menu need nothing else. It is also covered by `registry.test.ts`, which fuzzes every registered model with random valid inputs for 2, 3, and 5 options and checks the result: one score per option, all in 0–100, a valid lean, and a summary.
 
 Guidelines:
 
@@ -195,8 +220,9 @@ Guidelines:
 
 - `npm run check`: 0 errors, 0 warnings (strict, `noUncheckedIndexedAccess`).
 - `npm run lint`: ESLint and knip clean.
-- `npm test`: 57 tests across 9 files.
+- `npm test`: 69 tests across 10 files.
 - Lighthouse (mobile, production build): Performance 98, Accessibility 100, Best Practices 100, SEO 100.
-- axe: no violations on any model, in light and dark, with inputs filled and the scoreboard open.
+- axe: no violations on any model, or on the map with its add menu or an item's sheet open, at 380px and 1100px, in light and dark.
+- Browser checks (Playwright, production build): end to end, motion and reduced motion, the map's add, edit, remove, links, keyboard and phone layout. No console errors or warnings.
 - Keyboard: arrow keys, Home and End move through the tabs; every control is native (range, radio, checkbox, button) and has a visible `:focus-visible` ring. Scoreboard cells are buttons that jump to their model.
 - Works at 380px wide with no horizontal page scroll. The tab bar and scoreboard scroll inside their own containers.

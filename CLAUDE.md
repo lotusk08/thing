@@ -16,7 +16,9 @@ Deploys as the Cloudflare Worker `thing` on `thing.stevehoang.com` (`wrangler.js
 - Models are plugins in `src/lib/core/models/` (file + test + entry in `index.ts`). Adding a model must not require changes outside that folder. If a model needs a new kind of input, extend the generic schema (`core/schema.ts` + `components/fields/Fields.svelte`). Don't add model-specific UI.
 - `compute()` is pure, returns 0–100 per option on an absolute scale, and returns `null` when there isn't enough input yet.
 - Components stay thin. State lives in `src/lib/state.svelte.ts`.
-- The UI switches models with `switchModel()` (`src/lib/switch.ts`), never by setting `store.active`: it runs the View Transition the panel fades through.
+- The UI switches models and views with `switchModel()` / `switchView()` (`src/lib/switch.ts`), never by setting `store.active` or `store.view`: they run the View Transition.
+- The decision map (`core/map.ts`) is generic: a model puts items on it with a `map` hint on a list, or `map: true` on a top-level text field. No model-specific map UI; the map edits the same inputs the panels do.
+- Styles more than one component uses (segment buttons, the status `.pip`, the remove button) live in `src/app.css`.
 - No runtime dependencies beyond `ss` (bundled at build): no UI component or chart libraries, no network calls. Dev-only: `opentype.js` and `wawoff2` for `npm run logo`; ESLint and knip for `npm run lint`.
 - Mobile-first (380px), light/dark via `prefers-color-scheme`, native controls, visible focus.
 - The UI follows SS, Steve's Style (the `ss` package, github:lotusk08/ss). Read `node_modules/ss/README.md` and `node_modules/ss/skills/ss/SKILL.md` before UI work.

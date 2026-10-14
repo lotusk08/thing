@@ -16,12 +16,14 @@ export const prosCons = defineModel({
 			field.list('pros', 'Pros', [field.text('text', 'Pro'), field.number('impact', 'Impact', impact)], {
 				itemLabel: 'Pro',
 				addLabel: 'Add pro',
-				inline: true
+				inline: true,
+				map: { label: 'text', tone: 'for' }
 			}),
 			field.list('cons', 'Cons', [field.text('text', 'Con'), field.number('impact', 'Impact', impact)], {
 				itemLabel: 'Con',
 				addLabel: 'Add con',
-				inline: true
+				inline: true,
+				map: { label: 'text', tone: 'against' }
 			}),
 			field.number('min10', 'In 10 minutes I’ll feel', feel),
 			field.number('months10', 'In 10 months I’ll feel', feel),
