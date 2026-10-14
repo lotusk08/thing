@@ -41,7 +41,7 @@
 </script>
 
 <svelte:head>
-	<title>{title ? `${title} · Things` : 'Things'}</title>
+	<title>{title ? `${title} · Things` : 'Things · Decide with six frameworks'}</title>
 </svelte:head>
 
 <div class="page">

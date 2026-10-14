@@ -14,7 +14,17 @@
 	let measured = $state(false);
 	let ready = $state(false);
 
+	// Each end of the strip fades while tabs are scrolled out of sight past it.
+	let before = $state(false);
+	let after = $state(false);
+
+	function edges() {
+		before = list.scrollLeft > 1;
+		after = list.scrollLeft + list.clientWidth < list.scrollWidth - 1;
+	}
+
 	function measure() {
+		edges();
 		const tab = list.querySelector<HTMLElement>('[aria-selected="true"]');
 		if (!tab) return;
 		x = tab.offsetLeft;
@@ -23,16 +33,13 @@
 		return tab;
 	}
 
-	/** Bring a tab wholly into the strip, sideways only: the page never scrolls for it. */
-	function reveal(tab: HTMLElement) {
-		const strip = list.parentElement!;
-		const t = tab.getBoundingClientRect();
-		const s = strip.getBoundingClientRect();
-		strip.scrollLeft += Math.min(0, t.left - s.left) || Math.max(0, t.right - s.right);
+	/** Bring a tab to the middle of the strip, sideways only: the page never scrolls for it. */
+	function centre(tab: HTMLElement, behavior: ScrollBehavior = 'auto') {
+		list.scrollTo({ left: tab.offsetLeft + tab.offsetWidth / 2 - list.clientWidth / 2, behavior });
 	}
 
 	// Again whenever the selection moves or a tab's width changes (its "filled" dot);
-	// a new selection, from a tab or the scoreboard, is also brought into view.
+	// a new selection, from a tab or the scoreboard, glides to the middle of the strip.
 	let shown = store.active;
 	$effect(() => {
 		const now = store.active;
@@ -40,12 +47,15 @@
 		const tab = measure();
 		if (!tab || now === shown) return;
 		shown = now;
-		reveal(tab);
+		centre(tab);
 	});
 
 	onMount(() => {
 		const ro = new ResizeObserver(measure);
 		ro.observe(list);
+		// A model kept from last time starts in the middle, without the glide.
+		const tab = measure();
+		if (tab) centre(tab, 'instant');
 		// Only after the first placement, so the pill doesn't slide in from the left on load.
 		requestAnimationFrame(() => requestAnimationFrame(() => (ready = true)));
 		return () => ro.disconnect();
@@ -65,99 +75,171 @@
 	}
 </script>
 
-<div class="bar">
-	<!-- Each model's map instead of its form, on for every tab until turned off. -->
-	<div class="ss-segment map-toggle">
+<div class="tabs">
+	<!-- One pill: the map switch first, then the model tabs. -->
+	<div class="ss-segment">
+		<!-- The icon says what is on screen: the form (a list) or the map. -->
 		<button
 			type="button"
-			title={map ? 'Show the form' : 'Show the map'}
+			role="switch"
+			class="view"
 			aria-label="Map"
-			aria-pressed={map}
-			aria-controls="panel-{store.active}"
+			aria-checked={map}
+			title={map ? 'Map · show the form' : 'Form · show the map'}
 			onclick={() => switchView(map ? 'form' : 'map')}
 		>
-			<Icon name="mindmap" />
+			<span class="ss-swap" aria-hidden="true">
+				<span data-state="form" class:on={!map}><Icon name="bullet-list" /></span>
+				<span data-state="map" class:on={map}><Icon name="mindmap" /></span>
+			</span>
 		</button>
-	</div>
-
-	<div class="tabs">
-		<div
-			class="ss-segment strip"
-			class:measured
-			class:ready
-			role="tablist"
-			aria-label="Decision models"
-			style:--x="{x}px"
-			style:--w="{w}px"
-			bind:this={list}
-		>
-			{#each store.models as m, i (m.id)}
-				{@const selected = m.id === store.active}
-				<button
-					type="button"
-					role="tab"
-					id="tab-{m.id}"
-					title={m.name}
-					aria-selected={selected}
-					aria-controls={selected ? `panel-${m.id}` : undefined}
-					tabindex={selected ? 0 : -1}
-					onclick={() => select(m.id)}
-					onkeydown={(e) => onkeydown(e, i)}
-				>
-					{m.short}
-					{#if store.estimates[m.id]}
-						<span class="filled" aria-hidden="true"></span><span class="sr-only">(filled)</span>
-					{/if}
-				</button>
-			{/each}
+		<div class="edges" class:before class:after>
+			<div
+				class="strip"
+				class:measured
+				class:ready
+				role="tablist"
+				aria-label="Decision models"
+				style:--x="{x}px"
+				style:--w="{w}px"
+				onscroll={edges}
+				bind:this={list}
+			>
+				{#each store.models as m, i (m.id)}
+					{@const selected = m.id === store.active}
+					<button
+						type="button"
+						role="tab"
+						id="tab-{m.id}"
+						title={m.name}
+						aria-selected={selected}
+						aria-controls={selected ? `panel-${m.id}` : undefined}
+						tabindex={selected ? 0 : -1}
+						onclick={() => select(m.id)}
+						onkeydown={(e) => onkeydown(e, i)}
+					>
+						{m.short}
+						{#if store.estimates[m.id]}
+							<span class="filled" aria-hidden="true"></span><span class="sr-only">(filled)</span>
+						{/if}
+					</button>
+				{/each}
+			</div>
 		</div>
 	</div>
 </div>
 
 <style>
-	/* The toggle and the tabs stay live through a switch: one group, drawn once. */
-	.bar {
-		view-transition-name: tabs;
-		display: flex;
-		align-items: center;
-		gap: var(--ss-space-1);
-	}
-
-	/* The map's toggle: SS's pressed segment, its icon alone at the size of the tabs' text. */
-	.map-toggle {
-		flex: none;
-	}
-
-	.map-toggle button {
-		min-width: 0;
-		padding-inline: 10px;
-		font-size: var(--ss-text-sm);
-	}
-
 	.tabs {
-		flex: 1;
+		padding-block: var(--ss-space-1);
+	}
+
+	/*
+	 * The switch and the tabs stay live through a switch: one group, drawn once. The
+	 * pill is never wider than the screen: on a phone the tabs scroll inside it.
+	 */
+	.ss-segment {
+		view-transition-name: tabs;
+		align-items: center;
+		max-width: 100%;
+	}
+
+	/*
+	 * The map switch: SS's swap of two icons, before the tabs. No rule between them:
+	 * where tabs scroll away under it, the strip's fade sets it apart.
+	 */
+	.view {
+		display: grid;
+		flex: none;
+		place-items: center;
 		min-width: 0;
-		margin-inline-end: calc(var(--ss-space-1) * -1);
-		padding: var(--ss-space-1);
-		overflow-x: auto;
-		scroll-behavior: smooth;
-		scrollbar-width: none;
+		padding: 0 2px;
 	}
 
-	.tabs::-webkit-scrollbar {
-		display: none;
+	.view[aria-checked='true'] .ss-swap {
+		color: var(--ss-accent);
 	}
 
+	/*
+	 * Where tabs run on out of sight, the strip's end fades into the pill: a gradient
+	 * of the pill's own ground over them, eased so it has no hard edge, and rounded
+	 * at the pill's end so it never covers its border.
+	 */
+	.edges {
+		position: relative;
+		display: flex;
+		min-width: 0;
+	}
+
+	.edges::before,
+	.edges::after {
+		position: absolute;
+		z-index: 1;
+		top: 0;
+		bottom: 0;
+		width: var(--ss-space-12);
+		background: linear-gradient(
+			var(--to),
+			var(--ss-bg-2) 10%,
+			color-mix(in oklab, var(--ss-bg-2) 70%, transparent) 35%,
+			color-mix(in oklab, var(--ss-bg-2) 30%, transparent) 65%,
+			transparent
+		);
+		content: '';
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity var(--ss-dur-small) var(--ss-ease-out);
+	}
+
+	.edges::before {
+		--to: to right;
+
+		left: 0;
+	}
+
+	.edges::after {
+		--to: to left;
+
+		right: 0;
+		border-radius: 0 var(--ss-radius-full) var(--ss-radius-full) 0;
+	}
+
+	.edges.before::before,
+	.edges.after::after {
+		opacity: 1;
+	}
+
+	/*
+	 * The tabs, which scroll sideways when the pill runs out of room. The padding is
+	 * room for a tab's focus ring, which the scroll would otherwise clip; the margin
+	 * gives the height back.
+	 */
 	.strip {
 		position: relative;
 		isolation: isolate;
+		display: inline-flex;
+		min-width: 0;
+		margin-block: calc(var(--ss-space-1) * -1);
+		padding: var(--ss-space-1);
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
+	.strip::-webkit-scrollbar {
+		display: none;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.strip {
+			scroll-behavior: smooth;
+		}
 	}
 
 	.strip::before {
 		position: absolute;
 		z-index: -1;
-		top: 2px;
-		bottom: 2px;
+		top: var(--ss-space-1);
+		bottom: var(--ss-space-1);
 		left: 0;
 		width: var(--w);
 		border-radius: var(--ss-radius-full);

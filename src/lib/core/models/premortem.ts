@@ -1,8 +1,22 @@
+import { adding } from '../diagram';
 import { confidenceFromMargin, defineModel, leanOf, marginOf, minConfidence, ranked, score100 } from '../model';
 import { field } from '../schema';
 import { optionLabel } from '../util';
 
 const scale = { min: 1, max: 5, step: 1, default: 3 } as const;
+const likely = ['rare', 'likely'] as const;
+const severe = ['minor', 'disaster'] as const;
+
+const failures = field.list(
+	'failures',
+	'Failure reasons',
+	[
+		field.text('reason', 'Why it failed', { placeholder: 'e.g. Team culture was a bad fit' }),
+		field.number('likelihood', 'Likelihood', { ...scale, ends: likely }),
+		field.number('severity', 'Severity', { ...scale, ends: severe })
+	],
+	{ itemLabel: 'Failure', addLabel: 'Add failure reason' }
+);
 
 export const premortem = defineModel({
 	id: 'premortem',
@@ -11,18 +25,7 @@ export const premortem = defineModel({
 	description:
 		'Imagine it’s a year later and the choice failed. Why? List the failure reasons for each option and rate their likelihood and severity.',
 	inputsSchema: [
-		field.perOption('options', 'Per option', [
-			field.list(
-				'failures',
-				'Failure reasons',
-				[
-					field.text('reason', 'Why it failed', { placeholder: 'e.g. Team culture was a bad fit' }),
-					field.number('likelihood', 'Likelihood', { ...scale, ends: ['rare', 'likely'] }),
-					field.number('severity', 'Severity', { ...scale, ends: ['minor', 'disaster'] })
-				],
-				{ itemLabel: 'Failure', addLabel: 'Add failure reason', inline: true, map: { label: 'reason', tone: 'against' } }
-			)
-		])
+		field.perOption('options', 'Per option', [failures])
 	],
 	/**
 	 * Each failure is an expected-damage fraction L·S/25 (0.04–1). Exposure compounds:
@@ -58,6 +61,26 @@ export const premortem = defineModel({
 			lean,
 			confidence,
 			summary: (lean ? `${optionLabel(decision, lean)} carries the least risk${gap}.` : `Risk exposure is even${gap}.`) + threat
+		};
+	},
+	diagram(decision, { options }) {
+		const path = (o: string) => ['options', o, 'failures'];
+		return {
+			kind: 'risk',
+			max: scale.max,
+			x: { label: 'Likelihood', ends: [...likely] },
+			y: { label: 'Severity', ends: [...severe] },
+			points: decision.options.flatMap((o) =>
+				(options[o.id]?.failures ?? []).map((f, i) => ({
+					option: o.id,
+					n: i + 1,
+					text: f.reason.trim() || `Failure ${i + 1}`,
+					x: f.likelihood,
+					y: f.severity,
+					edit: { path: path(o.id), id: f.id, fields: failures.fields, title: 'Failure', removable: true, words: 'reason' }
+				}))
+			),
+			add: Object.fromEntries(decision.options.map((o) => [o.id, adding(failures, options[o.id]?.failures ?? [], path(o.id), { words: 'reason' })]))
 		};
 	}
 });

@@ -15,8 +15,10 @@ describe('weighted decision matrix', () => {
 	});
 
 	it('normalizes the weighted 1–10 total to 0–100', () => {
-		const e = run(matrix, d, { criteria: [criterion(5, 10, 1, 5.5), criterion(5, 10, 1, 5.5), criterion(5, 10, 1, 5.5)] })!;
-		expect(e.perOption).toEqual({ a: 100, b: 0, c: 50 });
+		const e = run(matrix, d, { criteria: [criterion(5, 10, 1, 7), criterion(5, 10, 1, 7), criterion(5, 10, 1, 7)] })!;
+		expect(e.perOption.a).toBe(100);
+		expect(e.perOption.b).toBe(0);
+		expect(e.perOption.c).toBeCloseTo(66.7, 1); // (7 − 1) / 9
 		expect(e.lean).toBe('a');
 		expect(e.confidence).toBe('high');
 		expect(e.summary).toBe('A scores 10.0/10 weighted across 3 criteria.');

@@ -1,3 +1,4 @@
+import type { Diagram } from './diagram';
 import type { Fields, Values } from './schema';
 import type { Confidence, Decision, Estimate, ModelId, OptionId } from './types';
 import { clamp } from './util';
@@ -12,6 +13,8 @@ export interface Model<C extends Fields = Fields> {
 	inputsSchema: C;
 	/** Inputs arrive normalized. Return null while there is not enough input to say anything. */
 	compute(decision: Decision, inputs: Values<C>): Estimate | null;
+	/** The model's map: one of the diagram kinds (core/diagram.ts), from the same inputs. Pure. */
+	diagram?(decision: Decision, inputs: Values<C>): Diagram;
 }
 
 export type AnyModel = Model<Fields>;

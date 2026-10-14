@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enter, leave } from 'ss/motion';
 	import { tick } from 'svelte';
 	import { createItem, type Item, type ListField } from '$lib/core/schema';
 	import type { Decision } from '$lib/core/types';
@@ -21,16 +22,30 @@
 	/** Let the panel know the user changed something (add/remove don't fire input events). */
 	const changed = () => root.dispatchEvent(new Event('change', { bubbles: true }));
 
+	const row = (id: string) => root.querySelector<HTMLElement>(`[data-item="${id}"]`);
+
+	/** A new item comes in with SS's motion (it opens in place, the items below make room), then takes the focus. */
 	async function add() {
 		const item = createItem(field, $state.snapshot(decision), $state.snapshot(items));
 		items.push(item);
 		changed();
 		await tick();
-		root.querySelector<HTMLElement>(`[data-item="${item.id}"] :is(input, textarea, select)`)?.focus();
+		const li = row(item.id);
+		if (!li) return;
+		enter(li);
+		// It comes in from hidden, which takes no focus: focus it once it shows, two frames on.
+		const words = li.querySelector<HTMLElement>(':is(input, textarea, select)');
+		requestAnimationFrame(() => requestAnimationFrame(() => words?.focus()));
 	}
 
-	function remove(index: number) {
-		items.splice(index, 1);
+	/** A removed item goes out with SS's motion, closing its gap, before it leaves the list. */
+	async function remove(id: string) {
+		const li = row(id);
+		// Already on its way out (a second click on its ×): let it go.
+		if (li && !li.classList.contains('show')) return;
+		if (li) await leave(li);
+		const index = items.findIndex((x) => x.id === id);
+		if (index >= 0) items.splice(index, 1);
 		changed();
 		root.querySelector<HTMLElement>('.add')?.focus();
 	}
@@ -43,17 +58,15 @@
 		<ol>
 			{#each items as item, i (item.id)}
 				{@const title = field.itemTitle?.(item, i, decision)}
-				<li data-item={item.id}>
-					<span class="n ss-figure" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+				<!-- The item's words full width beside its ×, its other inputs on a row under them. -->
+				<li class="ss-move tall up show" data-item={item.id}>
 					<div class="body">
-						<div class="head">
-							<p class="title" class:sr-only={title === undefined}>{title ?? `${field.itemLabel} ${i + 1}`}</p>
-							<button type="button" class="ss-btn ghost icon small remove" aria-label="Remove {noun} {i + 1}" onclick={() => remove(i)}>
-								<Icon name="close" />
-							</button>
-						</div>
-						<Fields fields={field.fields} bind:value={items[i]!} {decision} idPrefix={`${idPrefix}-${item.id}`} inline={field.inline} />
+						<p class="title" class:sr-only={title === undefined}>{title ?? `${field.itemLabel} ${i + 1}`}</p>
+						<Fields fields={field.fields} bind:value={items[i]!} {decision} idPrefix={`${idPrefix}-${item.id}`} compact />
 					</div>
+					<button type="button" class="ss-btn ghost icon small remove" aria-label="Remove {noun} {i + 1}" onclick={() => remove(item.id)}>
+						<Icon name="close" />
+					</button>
 				</li>
 			{/each}
 		</ol>
@@ -88,8 +101,10 @@
 
 	li {
 		display: grid;
-		grid-template-columns: 1.75rem minmax(0, 1fr);
-		padding-block: var(--ss-space-3) var(--ss-space-4);
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: start;
+		gap: var(--ss-space-2);
+		padding-block: var(--ss-space-3);
 		border-top: var(--ss-hairline) solid var(--ss-ui);
 	}
 
@@ -97,35 +112,16 @@
 		border-bottom: var(--ss-hairline) solid var(--ss-ui);
 	}
 
-	.n {
-		padding-top: 0.45rem;
-		color: var(--ss-tx-2);
-		font-size: var(--ss-text-xs);
-	}
-
 	.body {
 		display: grid;
-		gap: var(--ss-space-1);
-		min-width: 0;
-	}
-
-	.head {
-		display: flex;
-		align-items: start;
-		justify-content: space-between;
 		gap: var(--ss-space-2);
-		min-height: 24px;
+		min-width: 0;
 	}
 
 	.title {
 		margin: 0;
-		padding-top: 0.2rem;
 		color: var(--ss-tx-2);
 		font-size: var(--ss-text-sm);
-	}
-
-	.remove {
-		margin-left: auto;
 	}
 
 	.add {

@@ -1,8 +1,10 @@
 {
   "name": "things",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.1",
   "description": "Make one hard decision with six classic frameworks and compare their estimates side by side.",
+  "author": "Steve Hoang (https://stevehoang.com)",
+  "homepage": "https://thing.stevehoang.com",
+  "private": true,
   "type": "module",
   "scripts": {
     "fonts": "node scripts/fonts.js",
@@ -21,6 +23,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@resvg/resvg-js": "^2.6.2",
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.70.3",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",

@@ -5,6 +5,7 @@
  * attributes; `prepare()` puts them back the way `icon()` writes them.
  */
 import type { Confidence } from './core/types';
+import bulletList from 'ss/icons/line/bullet-list.svg?raw';
 import check from 'ss/icons/line/check.svg?raw';
 import chevronDown from 'ss/icons/line/chevron-down.svg?raw';
 import chevronRight from 'ss/icons/line/chevron-right.svg?raw';
@@ -27,6 +28,7 @@ const prepare = (svg: string, set: 'line' | 'solid') =>
 		.replace('<svg ', `<svg class="ss-icon ${set}" aria-hidden="true" focusable="false" `);
 
 const line = {
+	'bullet-list': bulletList,
 	check,
 	'chevron-down': chevronDown,
 	'chevron-right': chevronRight,

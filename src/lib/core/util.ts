@@ -4,6 +4,13 @@ export const clamp = (n: number, min: number, max: number) => Math.min(max, Math
 
 export const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0);
 
+/** A number as the app shows it: "+3" when `signed` and above zero, and halves as ½ (1½) when `halves`. */
+export function figure(n: number, { signed = false, halves = false } = {}): string {
+	const whole = Math.trunc(n);
+	const text = halves && Math.abs(n % 1) === 0.5 ? `${whole || (n < 0 ? '-' : '')}½` : String(n);
+	return signed && n > 0 ? `+${text}` : text;
+}
+
 export const mean = (xs: readonly number[]) => (xs.length ? sum(xs) / xs.length : 0);
 
 export function uid(): string {

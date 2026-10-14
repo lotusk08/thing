@@ -1,6 +1,6 @@
 import { isBlank, newDecision, newOption, parseDecision } from './core/decision';
 import { demo } from './core/demo';
-import { listAt, type MapAdd, type MapItem } from './core/map';
+import { listAt, type Add, type Ref } from './core/diagram';
 import { toMarkdown } from './core/markdown';
 import { models } from './core/models';
 import { createItem, normalizeInputs } from './core/schema';
@@ -78,6 +78,13 @@ class DecisionStore {
 
 	board = $derived(buildScoreboard(this.decision, models, this.estimates));
 
+	/** The active model's map (core/diagram.ts), from its inputs as compute() sees them. */
+	diagram = $derived.by(() => {
+		const m = this.activeModel;
+		const d = $state.snapshot(this.decision);
+		return m.diagram?.(d, normalizeInputs(m.inputsSchema, $state.snapshot(this.inputs[m.id]), d));
+	});
+
 	/** Nothing entered yet: the topbar offers the demo rather than a new decision. */
 	blank = $derived(isBlank(this.decision) && !Object.values(this.touched).some(Boolean));
 
@@ -110,22 +117,22 @@ class DecisionStore {
 		this.touched[id] = false;
 	}
 
-	/** Add an item from a model's map, linked to its option when the list links; returns its id. */
-	addItem(add: MapAdd): string | undefined {
-		const list = listAt(this.inputs, add.path);
+	/** Add an item from a model's map, with the fields it presets; returns its id. */
+	addItem(model: ModelId, add: Add): string | undefined {
+		const list = listAt(this.inputs[model], add.path);
 		if (!list || list.length >= (add.list.max ?? Infinity)) return;
 		const item = createItem(add.list, $state.snapshot(this.decision), $state.snapshot(list));
-		list.push(add.link ? { ...item, [add.link.key]: [add.link.option] } : item);
-		this.touch(add.model);
+		list.push({ ...item, ...add.preset });
+		this.touch(model);
 		return item.id;
 	}
 
-	removeItem(item: Pick<MapItem, 'model' | 'path' | 'id'>) {
-		const list = listAt(this.inputs, item.path);
-		const i = list?.findIndex((x) => x.id === item.id) ?? -1;
+	removeItem(model: ModelId, ref: Pick<Ref, 'path' | 'id'>) {
+		const list = listAt(this.inputs[model], ref.path);
+		const i = list?.findIndex((x) => x.id === ref.id) ?? -1;
 		if (i < 0) return;
 		list!.splice(i, 1);
-		this.touch(item.model);
+		this.touch(model);
 	}
 
 	startOver() {

@@ -1,3 +1,4 @@
+import { adding } from '../diagram';
 import { confidenceFromMargin, defineModel, leanOf, marginOf, minConfidence, score100 } from '../model';
 import { field } from '../schema';
 import { optionLabel, sum } from '../util';
@@ -13,35 +14,36 @@ const CATEGORIES = [
 
 const IMPACT_WEIGHT = { low: 1, medium: 2, high: 3 } as const;
 
+const problem = field.text('problem', 'Problem to solve', { placeholder: 'e.g. I feel stuck in my career', multiline: true });
+
+const causes = field.list(
+	'causes',
+	'Causes',
+	[
+		field.text('text', 'Cause', { placeholder: 'e.g. No mentor at work' }),
+		field.choice('category', 'Category', CATEGORIES, { default: 'people' }),
+		field.choice(
+			'impact',
+			'Impact',
+			[
+				{ value: 'low', label: 'Low' },
+				{ value: 'medium', label: 'Medium' },
+				{ value: 'high', label: 'High' }
+			],
+			{ default: 'medium' }
+		),
+		field.optionSet('addressedBy', 'Resolved by')
+	],
+	{ itemLabel: 'Cause', addLabel: 'Add cause', max: 30 }
+);
+
 export const fishbone = defineModel({
 	id: 'fishbone',
 	name: 'Fishbone (Ishikawa)',
 	short: 'Fishbone',
 	description:
 		'Start from the problem, not the options. Map its causes across six categories, then mark which options would fix each cause.',
-	inputsSchema: [
-		field.text('problem', 'Problem to solve', { placeholder: 'e.g. I feel stuck in my career', multiline: true, map: true }),
-		field.list(
-			'causes',
-			'Causes',
-			[
-				field.text('text', 'Cause', { placeholder: 'e.g. No mentor at work' }),
-				field.choice('category', 'Category', CATEGORIES, { default: 'people' }),
-				field.choice(
-					'impact',
-					'Impact',
-					[
-						{ value: 'low', label: 'Low' },
-						{ value: 'medium', label: 'Medium' },
-						{ value: 'high', label: 'High' }
-					],
-					{ default: 'medium' }
-				),
-				field.optionSet('addressedBy', 'Resolved by')
-			],
-			{ itemLabel: 'Cause', addLabel: 'Add cause', max: 30, map: { label: 'text' } }
-		)
-	],
+	inputsSchema: [problem, causes],
 	/**
 	 * Score = % of high-impact causes an option resolves. With no high-impact causes yet,
 	 * falls back to impact-weighted coverage of all causes (low confidence).
@@ -74,6 +76,25 @@ export const fishbone = defineModel({
 			summary: lean
 				? `${optionLabel(decision, lean)} resolves ${resolvedCount} of ${pool.length} ${high.length ? 'high-impact causes' : 'causes'}.`
 				: `No option stands out on ${scope}.`
+		};
+	},
+	diagram(decision, { problem: head, causes: all }) {
+		const ids = decision.options.map((o) => o.id);
+		return {
+			kind: 'fishbone',
+			head: { label: problem.label, text: head.trim(), edit: { path: [], fields: [problem], title: 'Problem' } },
+			bones: CATEGORIES.map((category) => ({
+				label: category.label,
+				causes: all
+					.filter((c) => (c.category || 'people') === category.value)
+					.map((c, i) => ({
+						text: c.text.trim() || `Cause ${i + 1}`,
+						weight: IMPACT_WEIGHT[c.impact || 'medium'],
+						options: ids.filter((id) => c.addressedBy.includes(id)),
+						edit: { path: ['causes'], id: c.id, fields: causes.fields, title: 'Cause', removable: true, words: 'text' }
+					})),
+				add: adding(causes, all, ['causes'], { preset: { category: category.value }, words: 'text' })
+			}))
 		};
 	}
 });

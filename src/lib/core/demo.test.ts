@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isBlank } from './decision';
 import { demo } from './demo';
-import { modelMap } from './map';
 import { models } from './models';
 import { normalizeInputs } from './schema';
 import { buildScoreboard } from './scoreboard';
@@ -37,22 +36,23 @@ describe('demo', () => {
 		expect(JSON.stringify(inputs)).toContain('Pay more than triples');
 	});
 
-	it('gives Fishbone’s map its links: causes resolved by one option, both, or none', () => {
-		const fishbone = models.find((m) => m.id === 'fishbone')!;
-		const map = modelMap(decision, fishbone, inputs.fishbone);
+	it('draws every model’s map: the diagrams carry the demo', () => {
 		const [sg, hcm] = decision.options.map((o) => o.id);
-		expect(map.shared.map((i) => i.links.length).sort()).toEqual([0, 1, 1, 1, 1, 2]);
-		expect(map.shared.find((i) => i.links.length === 2)?.links).toEqual([sg, hcm]);
-		expect(map.top[0]?.text).toBe('I feel stuck in my career.');
-	});
-
-	it('puts something on every model’s map, under both options', () => {
-		for (const m of models) {
-			const map = modelMap(decision, m, inputs[m.id]);
-			const under = decision.options.map((o) => map.options[o.id]!.length);
-			if (m.id === 'fishbone') expect(map.shared.length, m.id).toBe(6);
-			else for (const n of under) expect(n, m.id).toBeGreaterThan(0);
+		const diagram = (id: string) => models.find((m) => m.id === id)!.diagram!(decision, inputs[id] as never);
+		const fish = diagram('fishbone');
+		expect(fish.kind === 'fishbone' && fish.head.text).toBe('I feel stuck in my career.');
+		if (fish.kind === 'fishbone') {
+			const causes = fish.bones.flatMap((b) => b.causes);
+			expect(causes.length).toBe(6);
+			expect(causes.map((c) => c.options.length).sort()).toEqual([0, 1, 1, 1, 1, 2]);
+			expect(causes.find((c) => c.options.length === 2)?.options).toEqual([sg, hcm]);
 		}
+		const risk = diagram('premortem');
+		expect(risk.kind === 'risk' && risk.points.length).toBe(7);
+		const matrix = diagram('matrix');
+		expect(matrix.kind === 'matrix' && matrix.rows.length).toBe(5);
+		const coins = diagram('coin-flip');
+		expect(coins.kind === 'coins' && coins.question.answer).toBe(sg);
 	});
 
 	it('makes the models disagree, as a real decision does', () => {

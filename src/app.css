@@ -4,6 +4,14 @@
  */
 :root {
 	--column: 64rem;
+	/* One number on a scale's wheel (fields/Scale.svelte); the wheel shows five. */
+	--wheel-item: 2.75rem;
+}
+
+@media (pointer: coarse) {
+	:root {
+		--wheel-item: 3rem;
+	}
 }
 
 /*
@@ -73,37 +81,81 @@ select.ss-input option {
 	}
 }
 
-/* A status pip: a confidence in its note colour, or what a map item says about its option. */
-.pip {
-	flex: none;
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-	background: var(--ss-tx-3);
-}
-
-.pip.tip,
-.pip.for {
-	background: var(--ss-tip);
-}
-
-.pip.info {
-	background: var(--ss-info);
-}
-
-.pip.warning {
-	background: var(--ss-warning);
-}
-
-.pip.against {
-	background: var(--ss-danger);
-}
-
 /* SS fills a button under :hover, which a tap leaves behind on a touch screen: a ghost button stays clear there. */
 @media (hover: none) {
 	.ss-btn.ghost:hover:not(:disabled) {
 		background: none;
 	}
+}
+
+/*
+ * Charts on the maps. What belongs to no option takes the accent (blue by day,
+ * ember by night) from light to bold: --ramp-1 is a wash, --ramp-5 the accent
+ * itself. A bar fills along --rise, light where it starts and fuller where it
+ * ends. Fills stay light washes; lines are hairlines.
+ */
+:root {
+	--ramp-1: color-mix(in oklab, var(--ss-accent) 6%, transparent);
+	--ramp-2: color-mix(in oklab, var(--ss-accent) 14%, transparent);
+	--ramp-3: color-mix(in oklab, var(--ss-accent) 32%, transparent);
+	--ramp-4: color-mix(in oklab, var(--ss-accent) 60%, transparent);
+	--ramp-5: var(--ss-accent);
+	--rise: linear-gradient(to right, var(--ramp-2), var(--ramp-4));
+
+	/* The other accent: ember by day, blue by night (SS's own mode switch). */
+	--accent-other: var(--ss-ember);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-mode='light']) {
+		--accent-other: var(--ss-blue);
+	}
+}
+
+:root[data-mode='dark'] {
+	--accent-other: var(--ss-blue);
+}
+
+/*
+ * Options on the maps: A, B, C… each its own SS hue, A the accent and B the other
+ * one, so two options are always blue against ember. Each has its own dash too, so
+ * they read apart without colour. --opt-rise is a bar in it; --opt-tint and
+ * --opt-ink are an option's badge (its letter, its A1 tag): a disc of its colour,
+ * no outline, the ink deepened toward the text so it keeps AA.
+ */
+.opt-0 {
+	--opt: var(--ss-accent);
+	--opt-dash: none;
+}
+
+.opt-1 {
+	--opt: var(--accent-other);
+	--opt-dash: 5 3;
+}
+
+.opt-2 {
+	--opt: var(--ss-purple);
+	--opt-dash: 1.5 2.5;
+}
+
+.opt-3 {
+	--opt: var(--ss-green);
+	--opt-dash: 7 3 1.5 3;
+}
+
+.opt-4 {
+	--opt: var(--ss-red);
+	--opt-dash: 10 3;
+}
+
+.opt-0,
+.opt-1,
+.opt-2,
+.opt-3,
+.opt-4 {
+	--opt-rise: linear-gradient(to right, color-mix(in oklab, var(--opt) 18%, transparent), color-mix(in oklab, var(--opt) 70%, transparent));
+	--opt-tint: linear-gradient(to bottom, color-mix(in oklab, var(--opt) 16%, var(--ss-bg)), color-mix(in oklab, var(--opt) 32%, var(--ss-bg)));
+	--opt-ink: color-mix(in oklab, var(--opt) 50%, var(--ss-tx));
 }
 
 /* A remove (×) button: icon ink, danger under the pointer or a press. */
@@ -112,6 +164,11 @@ select.ss-input option {
 	transition:
 		color var(--ss-dur-hover) var(--ss-ease-hover),
 		background var(--ss-dur-hover) var(--ss-ease-hover);
+}
+
+/* With its word it is text, so it reads in --ss-tx-2 (AA); alone, the icon keeps the icon ink. */
+.ss-btn.remove:not(.icon) {
+	color: var(--ss-tx-2);
 }
 
 @media (hover: hover) {

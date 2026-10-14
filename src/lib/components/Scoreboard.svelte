@@ -194,8 +194,26 @@
 		white-space: nowrap;
 	}
 
-	.confidence .pip {
+	/* The verdict's confidence as a pip in its note colour. */
+	.pip {
+		flex: none;
+		width: 6px;
+		height: 6px;
 		margin-right: 6px;
+		border-radius: 50%;
+		background: var(--ss-tx-3);
+	}
+
+	.pip.tip {
+		background: var(--ss-tip);
+	}
+
+	.pip.info {
+		background: var(--ss-info);
+	}
+
+	.pip.warning {
+		background: var(--ss-warning);
 	}
 
 	/* The copy button sits at the right edge: anchor its tooltip (and its growth) there. */
@@ -338,19 +356,20 @@
 		background: var(--ss-ui);
 	}
 
+	/* Light to bold in the accent, as on the maps; the average, and the lead, bolder. */
 	.meter > span {
 		display: block;
 		height: 100%;
-		background: var(--ss-tx-3);
+		background: linear-gradient(to right, var(--ramp-1), var(--ramp-3));
 	}
 
 	.avg .meter > span {
-		background: var(--ss-tx-2);
+		background: linear-gradient(to right, var(--ramp-2), var(--ramp-3));
 	}
 
 	.lean .meter > span,
 	tr.leader .avg .meter > span {
-		background: var(--ss-tx);
+		background: var(--rise);
 	}
 
 	.md {

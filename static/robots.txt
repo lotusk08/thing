@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://thing.stevehoang.com/sitemap.xml

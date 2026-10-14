@@ -10,18 +10,51 @@
 		<script>try{var m=localStorage.getItem('mode');if(m==='light'||m==='dark')document.documentElement.setAttribute('data-mode',m)}catch(e){}</script>
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
 		<link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
+		<link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
+		<meta name="application-name" content="Things" />
+		<meta name="author" content="Steve Hoang" />
+		<meta name="apple-mobile-web-app-title" content="Things" />
 		<link rel="preload" href="%sveltekit.assets%/fonts/domaine/regular-italic.woff2" as="font" type="font/woff2" crossorigin />
 		<style>
 			@font-face{font-family:'Domaine Display Narrow';font-style:italic;font-weight:400;font-display:block;src:url('%sveltekit.assets%/fonts/domaine/regular-italic.woff2') format('woff2')}
 		</style>
-		<title>Things</title>
+		<title>Things · Decide with six frameworks</title>
 		<link rel="canonical" href="https://thing.stevehoang.com/" />
+		<!-- The social card and icons are drawn by scripts/logo.js (npm run logo). -->
 		<meta property="og:type" content="website" />
 		<meta property="og:site_name" content="Things" />
-		<meta property="og:title" content="Things" />
+		<meta property="og:locale" content="en_US" />
+		<meta property="og:title" content="Things · Decide with six frameworks" />
 		<meta property="og:description" content="Make one hard decision with six classic frameworks and compare their estimates side by side." />
 		<meta property="og:url" content="https://thing.stevehoang.com/" />
-		<meta name="twitter:card" content="summary" />
+		<meta property="og:image" content="https://thing.stevehoang.com/og.png" />
+		<meta property="og:image:type" content="image/png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content="Things: one hard decision, six classic frameworks, side by side." />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content="Things · Decide with six frameworks" />
+		<meta name="twitter:description" content="Make one hard decision with six classic frameworks and compare their estimates side by side." />
+		<meta name="twitter:image" content="https://thing.stevehoang.com/og.png" />
+		<meta name="twitter:image:alt" content="Things: one hard decision, six classic frameworks, side by side." />
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "WebApplication",
+				"name": "Things",
+				"url": "https://thing.stevehoang.com/",
+				"description": "Make one hard decision with six classic frameworks and compare their estimates side by side. Local-first: no account, nothing leaves your browser.",
+				"image": "https://thing.stevehoang.com/og.png",
+				"applicationCategory": "UtilitiesApplication",
+				"operatingSystem": "Any",
+				"browserRequirements": "Requires JavaScript.",
+				"inLanguage": "en",
+				"isAccessibleForFree": true,
+				"offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+				"featureList": ["Six Thinking Hats", "Weighted Decision Matrix", "Pros/Cons + 10-10-10", "Pre-mortem", "Fishbone (Ishikawa)", "Regret / Coin Flip", "A scoreboard comparing every framework's estimate"],
+				"author": { "@type": "Person", "name": "Steve Hoang", "url": "https://stevehoang.com" }
+			}
+		</script>
 		%sveltekit.head%
 	</head>
 	<body>
