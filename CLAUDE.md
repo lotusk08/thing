@@ -18,6 +18,7 @@ Deploys as the Cloudflare Worker `thing` on `thing.stevehoang.com` (`wrangler.js
 - Components stay thin. State lives in `src/lib/state.svelte.ts`.
 - The UI switches models and the map with `switchModel()` / `switchView()` (`src/lib/switch.ts`), never by setting `store.active` or `store.view`: they run the View Transition. The map is the first tab, before the models.
 - The decision map (`core/map.ts`) is generic: a model puts items on it with a `map` hint on a list, or `map: true` on a top-level text field. No model-specific map UI; the map edits the same inputs the panels do.
+- The demo (`core/demo.ts`) is raw inputs per model id, normalized on load, so a model needs no demo to work; `demo.test.ts` pins its verdict. The topbar button offers it only while the decision is blank (`store.blank`).
 - Styles more than one component uses (segment buttons, the status `.pip`, the remove button) live in `src/app.css`.
 - No runtime dependencies beyond `ss` (bundled at build): no UI component or chart libraries, no network calls. Dev-only: `opentype.js` and `wawoff2` for `npm run logo`; ESLint and knip for `npm run lint`.
 - Mobile-first (380px), light/dark via `prefers-color-scheme`, native controls, visible focus.

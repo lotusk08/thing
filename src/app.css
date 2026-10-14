@@ -99,6 +99,13 @@ select.ss-input option {
 	background: var(--ss-danger);
 }
 
+/* SS fills a button under :hover, which a tap leaves behind on a touch screen: a ghost button stays clear there. */
+@media (hover: none) {
+	.ss-btn.ghost:hover:not(:disabled) {
+		background: none;
+	}
+}
+
 /* A remove (×) button: icon ink, danger under the pointer or a press. */
 .ss-btn.remove {
 	color: var(--ss-icon);

@@ -5,8 +5,20 @@ export function newOption(label = ''): Option {
 	return { id: uid(), label };
 }
 
+const STARTING_OPTIONS = ['Option A', 'Option B'];
+
 export function newDecision(now = Date.now()): Decision {
-	return { id: uid(), title: '', options: [newOption('Option A'), newOption('Option B')], notes: '', createdAt: now };
+	return { id: uid(), title: '', options: STARTING_OPTIONS.map((label) => newOption(label)), notes: '', createdAt: now };
+}
+
+/** Nothing written yet: no title or notes, and the starting options as they came. */
+export function isBlank(d: Decision): boolean {
+	return (
+		!d.title.trim() &&
+		!d.notes?.trim() &&
+		d.options.length === STARTING_OPTIONS.length &&
+		d.options.every((o, i) => o.label === STARTING_OPTIONS[i])
+	);
 }
 
 /** Validate untrusted data (e.g. from localStorage). Returns null if unusable. */

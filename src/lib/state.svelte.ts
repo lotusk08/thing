@@ -1,7 +1,7 @@
-import { newDecision, newOption, parseDecision } from './core/decision';
+import { isBlank, newDecision, newOption, parseDecision } from './core/decision';
+import { demo } from './core/demo';
 import { decisionMap, listAt, type ListRef, type MapAdd } from './core/map';
 import { toMarkdown } from './core/markdown';
-import type { AnyModel } from './core/model';
 import { models } from './core/models';
 import { createItem, normalizeInputs } from './core/schema';
 import { buildScoreboard } from './core/scoreboard';
@@ -24,17 +24,13 @@ interface Saved {
 	view: View;
 }
 
-const defaults = (m: AnyModel, d: Decision) => normalizeInputs(m.inputsSchema, undefined, d);
+/** Every model's inputs, complete and valid for `d`, from anything raw (stored, the demo, nothing). */
+const normalized = (raw: Record<string, unknown>, d: Decision): Record<ModelId, Inputs> =>
+	Object.fromEntries(models.map((m) => [m.id, normalizeInputs(m.inputsSchema, raw[m.id], d)]));
 
 function fresh(): Saved {
 	const decision = newDecision();
-	return {
-		decision,
-		inputs: Object.fromEntries(models.map((m) => [m.id, defaults(m, decision)])),
-		touched: {},
-		active: models[0]!.id,
-		view: 'models'
-	};
+	return { decision, inputs: normalized({}, decision), touched: {}, active: models[0]!.id, view: 'models' };
 }
 
 function load(): Saved {
@@ -46,9 +42,7 @@ function load(): Saved {
 		const touched = isRecord(raw.touched) ? raw.touched : {};
 		return {
 			decision,
-			inputs: Object.fromEntries(
-				models.map((m) => [m.id, normalizeInputs(m.inputsSchema, inputs[m.id], decision)])
-			),
+			inputs: normalized(inputs, decision),
 			touched: Object.fromEntries(models.map((m) => [m.id, touched[m.id] === true])),
 			active: models.find((m) => m.id === raw.active)?.id ?? models[0]!.id,
 			view: raw.view === 'map' ? 'map' : 'models'
@@ -84,6 +78,9 @@ class DecisionStore {
 
 	board = $derived(buildScoreboard(this.decision, models, this.estimates));
 
+	/** Nothing entered yet: the topbar offers the demo rather than a new decision. */
+	blank = $derived(isBlank(this.decision) && !Object.values(this.touched).some(Boolean));
+
 	map = $derived(decisionMap(this.decision, models, this.inputs));
 
 	canAddOption = $derived(this.decision.options.length < MAX_OPTIONS);
@@ -111,7 +108,7 @@ class DecisionStore {
 	resetModel(id: ModelId) {
 		const m = models.find((x) => x.id === id);
 		if (!m) return;
-		this.inputs[id] = defaults(m, $state.snapshot(this.decision));
+		this.inputs[id] = normalizeInputs(m.inputsSchema, undefined, $state.snapshot(this.decision));
 		this.touched[id] = false;
 	}
 
@@ -134,11 +131,26 @@ class DecisionStore {
 	}
 
 	startOver() {
-		const f = fresh();
-		this.decision = f.decision;
-		this.inputs = f.inputs;
-		this.touched = f.touched;
-		this.active = f.active;
+		this.#take(fresh());
+	}
+
+	/** The demo decision (core/demo.ts), every model it fills marked as entered. */
+	loadDemo() {
+		const { decision, inputs } = demo();
+		this.#take({
+			decision,
+			inputs: normalized(inputs, decision),
+			touched: Object.fromEntries(models.map((m) => [m.id, m.id in inputs])),
+			active: models[0]!.id
+		});
+	}
+
+	/** Put a whole decision in place. The view stays as it is. */
+	#take(next: Omit<Saved, 'view'>) {
+		this.decision = next.decision;
+		this.inputs = next.inputs;
+		this.touched = next.touched;
+		this.active = next.active;
 	}
 
 	markdown(): string {

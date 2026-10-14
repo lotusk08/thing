@@ -17,7 +17,7 @@
 	import Scoreboard from '$lib/components/Scoreboard.svelte';
 	import Wordmark from '$lib/components/Wordmark.svelte';
 	import { store } from '$lib/state.svelte';
-	import { switchModel } from '$lib/switch';
+	import { replace, switchModel } from '$lib/switch';
 
 	onMount(() => {
 		initMode();
@@ -26,8 +26,10 @@
 
 	const title = $derived(store.decision.title.trim());
 
-	function startOver() {
-		if (confirm('Start a new decision? This clears the title, options and every model.')) store.startOver();
+	// One button, by what's on screen: nothing yet offers the demo; anything else, a new decision.
+	function fresh() {
+		if (store.blank) return void replace(() => store.loadDemo());
+		if (confirm('Start a new decision? This clears the title, options and every model.')) void replace(() => store.startOver());
 	}
 
 	async function jump(modelId: string) {
@@ -47,8 +49,9 @@
 	<header class="ss-topbar wrap">
 		<h1 class="mark"><Wordmark /><span class="sr-only">Things</span></h1>
 		<div class="ss-topbar-end">
-			<button type="button" class="ss-btn ghost small" onclick={startOver}>
-				<Icon name="plus" /> New decision
+			<button type="button" class="ss-btn ghost small" onclick={fresh}>
+				<Icon name={store.blank ? 'lightbulb' : 'plus'} />
+				{store.blank ? 'Load demo' : 'New decision'}
 			</button>
 			<span class="ss-dot"></span>
 			<button class="ss-mode" type="button" aria-label="Switch light and dark" onclick={toggleMode}>

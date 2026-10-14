@@ -11,13 +11,14 @@ import chevronRight from 'ss/icons/line/chevron-right.svg?raw';
 import chevronUp from 'ss/icons/line/chevron-up.svg?raw';
 import close from 'ss/icons/line/close.svg?raw';
 import copy from 'ss/icons/line/copy.svg?raw';
+import lightbulb from 'ss/icons/line/lightbulb.svg?raw';
 import mindmap from 'ss/icons/line/mindmap.svg?raw';
 import plus from 'ss/icons/line/plus.svg?raw';
 import refresh from 'ss/icons/line/refresh.svg?raw';
 import trash from 'ss/icons/line/trash.svg?raw';
-import circleExclamation from 'ss/icons/solid/circle-exclamation.svg?raw';
-import lightbulb from 'ss/icons/solid/lightbulb.svg?raw';
-import triangleExclamation from 'ss/icons/solid/triangle-exclamation.svg?raw';
+import noteInfo from 'ss/icons/solid/circle-exclamation.svg?raw';
+import noteTip from 'ss/icons/solid/lightbulb.svg?raw';
+import noteWarning from 'ss/icons/solid/triangle-exclamation.svg?raw';
 
 const prepare = (svg: string, set: 'line' | 'solid') =>
 	svg
@@ -32,13 +33,14 @@ const line = {
 	'chevron-up': chevronUp,
 	close,
 	copy,
+	lightbulb,
 	mindmap,
 	plus,
 	refresh,
 	trash
 };
-/** SS's note icons (`notes` in `ss/icons`). */
-const solid = { lightbulb, 'circle-exclamation': circleExclamation, 'triangle-exclamation': triangleExclamation };
+/** SS's note icons (`notes` in `ss/icons`), by note type. */
+const solid = { 'note-tip': noteTip, 'note-info': noteInfo, 'note-warning': noteWarning };
 
 export type IconName = keyof typeof line | keyof typeof solid;
 
@@ -49,7 +51,7 @@ export const icons = Object.fromEntries([
 
 /** A confidence reads as one of SS's note families, with that note's icon. */
 export const NOTES = {
-	high: { type: 'tip', icon: 'lightbulb' },
-	medium: { type: 'info', icon: 'circle-exclamation' },
-	low: { type: 'warning', icon: 'triangle-exclamation' }
+	high: { type: 'tip', icon: 'note-tip' },
+	medium: { type: 'info', icon: 'note-info' },
+	low: { type: 'warning', icon: 'note-warning' }
 } as const satisfies Record<Confidence, { type: string; icon: IconName }>;

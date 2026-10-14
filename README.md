@@ -17,6 +17,13 @@ Each model also reports a **lean** (its pick, if there's no tie), a **confidence
 
 The **verdict** names the option with the highest average across filled models and how many models agree with it. Confidence is high when 3+ models are filled, ≥75% agree, and the lead is ≥10 points. It is medium with 2+ models, ≥50% agreement, and a lead ≥5. Otherwise it is low. **Copy Markdown** exports the table, the verdict, and each model's summary.
 
+**Demo:** on a blank decision the topbar button reads **Load demo**. It loads one real decision with every model filled in: a senior backend engineer in Thao Dien (Thu Duc), Ho Chi Minh City, weighing a S$9,500-a-month offer from a payments company in Singapore against 60 million VND at home, with parents in Go Vap and a partner who would need a work pass of their own. Singapore leads (avg 65), 4 of 6 models agree, medium confidence; the Matrix and the Pre-mortem side with staying. Once anything is written, the same button reads **New decision**, and it asks before clearing. The figures are public ones as of October 2026 (`src/lib/core/demo.ts` lists them):
+
+- Senior engineer pay: 40–60 million VND a month in HCMC ([ITviec-based guides](https://employsome.sda.company/?p=6791)), S$9,000–15,000 in Singapore ([Second Talent](https://www.secondtalent.com/developer-rate-card/singapore/), [Kaopiz](https://kaopiz.com/en/articles/software-developer-salary-singapore/)).
+- Employment Pass minimum for new applicants: S$5,600, rising to S$6,000 in 2027 ([BritCham, Budget 2026](https://britcham.org.sg/news/budget-2026-salary-threshold-new-employment-pass-applicants-be-raised-6000-2027)).
+- One-bedroom rent: S$3,300 (transactions, [EdgeProp](https://buddy.edgeprop.sg/discover/what-are-the-typical-monthly-rental-prices-for-a-1-bedroom-condominium-in-affordable-areas-like-8852eee9-df48-4dd8-b7fc-f2b14cad5e95)) to S$4,200 (listings, [Cove](https://blog.cove.sg/cost-to-rent-in-singapore/)) in Singapore; 12–22 million VND in Thao Dien ([AffordWhere](https://affordwhere.com/vietnam/ho-chi-minh/neighborhood/district-2-thao-dien)).
+- SGN–SIN: about 2h20m, budget fares around 3 million VND return ([HappyFares](https://www.happyfares.in/flights/ho-chi-minh-city-singapore-cheap-airtickets)); about 20,500 VND to the Singapore dollar ([OFX](https://www.ofx.com/en-us/exchange-rates/sgd-to-vnd/)).
+
 The **map** (the first tab, its icon alone, before the models) lays out what the models hold around the options:
 
 - Fishbone's problem sits at the top.
@@ -105,6 +112,7 @@ src/
       model.ts                 Model interface, defineModel(), lean/confidence helpers
       scoreboard.ts            averages, agreement, verdict
       map.ts                   the decision map, read generically from every model's schema and inputs
+      demo.ts                  the demo decision: raw inputs per model, normalized on load
       markdown.ts              Markdown export
       decision.ts              new/parse decision
       testing.ts               test helpers (decision(), run(), seeded rng, randomInputs())
@@ -207,7 +215,7 @@ describe('gut check', () => {
 export const models = [sixHats, matrix, prosCons, premortem, fishbone, coinFlip, gutCheck];
 ```
 
-That's it. The model gets a tab, an input panel, a scoreboard column, and a Markdown column. To put its items on the map, give a list a `map` hint (see Schema fields); the map's view, sheet and add menu need nothing else. It is also covered by `registry.test.ts`, which fuzzes every registered model with random valid inputs for 2, 3, and 5 options and checks the result: one score per option, all in 0–100, a valid lean, and a summary.
+That's it. The model gets a tab, an input panel, a scoreboard column, and a Markdown column. It starts empty in the demo; to fill it there, add its raw inputs under its id in `src/lib/core/demo.ts`. To put its items on the map, give a list a `map` hint (see Schema fields); the map's view, sheet and add menu need nothing else. It is also covered by `registry.test.ts`, which fuzzes every registered model with random valid inputs for 2, 3, and 5 options and checks the result: one score per option, all in 0–100, a valid lean, and a summary.
 
 Guidelines:
 
@@ -220,7 +228,7 @@ Guidelines:
 
 - `npm run check`: 0 errors, 0 warnings (strict, `noUncheckedIndexedAccess`).
 - `npm run lint`: ESLint and knip clean.
-- `npm test`: 69 tests across 10 files.
+- `npm test`: 78 tests across 12 files.
 - Lighthouse (mobile, production build): Performance 98, Accessibility 100, Best Practices 100, SEO 100.
 - axe: no violations on any model, or on the map with its add menu or an item's sheet open, at 380px and 1100px, in light and dark.
 - Browser checks (Playwright, production build): end to end, motion and reduced motion, the map's add, edit, remove, links, keyboard and phone layout. No console errors or warnings.
