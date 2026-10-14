@@ -3,7 +3,6 @@ declare module 'ss/mode' {
 	export type Mode = 'light' | 'dark';
 	export function initMode(): Mode;
 	export function toggleMode(): Mode;
-	export function currentMode(): Mode;
 }
 
 declare module 'ss/icons' {

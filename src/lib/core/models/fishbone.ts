@@ -2,7 +2,7 @@ import { confidenceFromMargin, defineModel, leanOf, marginOf, minConfidence, sco
 import { field } from '../schema';
 import { optionLabel, sum } from '../util';
 
-export const CATEGORIES = [
+const CATEGORIES = [
 	{ value: 'people', label: 'People' },
 	{ value: 'process', label: 'Process' },
 	{ value: 'tools', label: 'Tools' },

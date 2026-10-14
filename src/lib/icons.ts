@@ -4,6 +4,7 @@
  * The single files are SS's `icon()` output without its class and aria
  * attributes; `prepare()` puts them back the way `icon()` writes them.
  */
+import type { Confidence } from './core/types';
 import check from 'ss/icons/line/check.svg?raw';
 import chevronDown from 'ss/icons/line/chevron-down.svg?raw';
 import chevronRight from 'ss/icons/line/chevron-right.svg?raw';
@@ -23,21 +24,19 @@ const prepare = (svg: string, set: 'line' | 'solid') =>
 		.replace('<svg ', `<svg class="ss-icon ${set}" aria-hidden="true" focusable="false" `);
 
 const line = { check, 'chevron-down': chevronDown, 'chevron-right': chevronRight, 'chevron-up': chevronUp, close, copy, plus, refresh };
+/** SS's note icons (`notes` in `ss/icons`). */
+const solid = { lightbulb, 'circle-exclamation': circleExclamation, 'triangle-exclamation': triangleExclamation };
 
-export type IconName = keyof typeof line;
+export type IconName = keyof typeof line | keyof typeof solid;
 
-export const icons = Object.fromEntries(
-	Object.entries(line).map(([name, svg]) => [name, prepare(svg, 'line')])
-) as Record<IconName, string>;
+export const icons = Object.fromEntries([
+	...Object.entries(line).map(([name, svg]) => [name, prepare(svg, 'line')]),
+	...Object.entries(solid).map(([name, svg]) => [name, prepare(svg, 'solid')])
+]) as Record<IconName, string>;
 
-/** SS's note icons (`notes` in `ss/icons`): tip, info and warning are the ones used here. */
-const NOTE_ICONS = { tip: lightbulb, info: circleExclamation, warning: triangleExclamation };
-
-export type NoteType = keyof typeof NOTE_ICONS;
-
-export const noteIcons = Object.fromEntries(
-	Object.entries(NOTE_ICONS).map(([type, svg]) => [
-		type,
-		`<span class="ss-note-icon" aria-hidden="true">${prepare(svg, 'solid')}</span>`
-	])
-) as Record<NoteType, string>;
+/** A confidence reads as one of SS's note families, with that note's icon. */
+export const NOTES = {
+	high: { type: 'tip', icon: 'lightbulb' },
+	medium: { type: 'info', icon: 'circle-exclamation' },
+	low: { type: 'warning', icon: 'triangle-exclamation' }
+} as const satisfies Record<Confidence, { type: string; icon: IconName }>;

@@ -50,6 +50,25 @@ select.ss-input option {
 	border: 0;
 }
 
+/* A remove (×) button: icon ink, danger under the pointer or a press. */
+.ss-btn.remove {
+	color: var(--ss-icon);
+	transition:
+		color var(--ss-dur-hover) var(--ss-ease-hover),
+		background var(--ss-dur-hover) var(--ss-ease-hover);
+}
+
+@media (hover: hover) {
+	.ss-btn.remove:hover:not(:disabled) {
+		color: var(--ss-danger);
+	}
+}
+
+.ss-btn.remove:active:not(:disabled) {
+	color: var(--ss-danger);
+	transition-duration: 0s;
+}
+
 /* SS's round buttons are 1.75rem; give them a 44px hit area under a finger. */
 @media (pointer: coarse) {
 	.ss-mode,
@@ -66,5 +85,49 @@ select.ss-input option {
 		height: var(--ss-tap-target);
 		content: '';
 		transform: translate(-50%, -50%);
+	}
+}
+
+/*
+ * Switching models (src/lib/switch.ts) is a View Transition, SS's native motion:
+ * the panel fades through, the old one out over --ss-dur-micro and the new one in
+ * over --ss-dur-enter on --ss-ease-quint from halfway through that, so two
+ * unrelated panels never read on top of each other. A fade only, so it stays under
+ * reduced motion too. The tabs and the scoreboard are groups of
+ * their own shown live: the sliding pill is not drawn twice, and the sticky bar
+ * stays on top of the panel.
+ */
+::view-transition-group(panel) {
+	animation-duration: var(--ss-dur-enter);
+	animation-timing-function: var(--ss-ease-quint);
+}
+
+::view-transition-old(panel) {
+	animation: var(--ss-dur-micro) ease both switch-out;
+}
+
+::view-transition-new(panel) {
+	animation: var(--ss-dur-enter) var(--ss-ease-quint) calc(var(--ss-dur-micro) / 2) both switch-in;
+}
+
+::view-transition-old(tabs),
+::view-transition-old(board) {
+	display: none;
+}
+
+::view-transition-new(tabs),
+::view-transition-new(board) {
+	animation: none;
+}
+
+@keyframes switch-out {
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes switch-in {
+	from {
+		opacity: 0;
 	}
 }

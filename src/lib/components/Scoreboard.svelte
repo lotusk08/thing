@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Confidence } from '$lib/core/types';
 	import { optionLabel } from '$lib/core/util';
+	import { NOTES } from '$lib/icons';
 	import { store } from '$lib/state.svelte';
 	import Icon from './Icon.svelte';
 
@@ -14,8 +14,6 @@
 
 	const verdict = $derived(store.board.verdict);
 	const leaderAverage = $derived(store.board.rows.find((r) => r.isLeader)?.average ?? 0);
-	const NOTE = { high: 'tip', medium: 'info', low: 'warning' } as const satisfies Record<Confidence, string>;
-	const round = (v: number) => Math.round(v);
 	const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 	async function copy() {
@@ -40,6 +38,15 @@
 	}
 </script>
 
+{#snippet score(value: number | null)}
+	{#if value === null}
+		<span class="none">–</span>
+	{:else}
+		<span class="num ss-figure">{Math.round(value)}</span>
+		<span class="meter"><span style:width="{value}%"></span></span>
+	{/if}
+{/snippet}
+
 <aside class="board" aria-label="Scoreboard">
 	<div class="wrap inner">
 		<div class="bar">
@@ -61,9 +68,9 @@
 					<span class="ss-faint">Fill in any model to see a verdict.</span>
 				{:else if verdict.leader}
 					<span><strong>{optionLabel(store.decision, verdict.leader)}</strong> leads</span>
-					<span class="part"><span class="ss-dot"></span><span class="ss-figure">avg {round(leaderAverage)}</span></span>
+					<span class="part"><span class="ss-dot"></span><span class="ss-figure">avg {Math.round(leaderAverage)}</span></span>
 					<span class="part"><span class="ss-dot"></span>{verdict.agree} of {plural(verdict.filled, 'model')} agree</span>
-					<span class="part confidence"><span class="ss-dot"></span><i class={NOTE[verdict.confidence]}></i>{verdict.confidence} confidence</span>
+					<span class="part confidence"><span class="ss-dot"></span><i class={NOTES[verdict.confidence].type}></i>{verdict.confidence} confidence</span>
 				{:else}
 					<span><strong>{verdict.tied.map((id) => optionLabel(store.decision, id)).join(' and ')}</strong> are tied</span>
 					<span class="part"><span class="ss-dot"></span>{plural(verdict.filled, 'model')}</span>
@@ -112,25 +119,15 @@
 												class:lean={cell.isLean}
 												aria-label="{cell.model.name}, {row.label}: {cell.value === null
 													? 'not filled in yet'
-													: `${round(cell.value)} of 100${cell.isLean ? ', this model’s pick' : ''}`}. Open model."
+													: `${Math.round(cell.value)} of 100${cell.isLean ? ', this model’s pick' : ''}`}. Open model."
 												onclick={() => onjump(cell.model.id)}
 											>
-												{#if cell.value === null}
-													<span class="none">–</span>
-												{:else}
-													<span class="num ss-figure">{round(cell.value)}</span>
-													<span class="meter"><span style:width="{cell.value}%"></span></span>
-												{/if}
+												{@render score(cell.value)}
 											</button>
 										</td>
 									{/each}
 									<td class="avg">
-										{#if row.average === null}
-											<span class="none">–</span>
-										{:else}
-											<span class="num ss-figure">{round(row.average)}</span>
-											<span class="meter"><span style:width="{row.average}%"></span></span>
-										{/if}
+										{@render score(row.average)}
 									</td>
 								</tr>
 							{/each}
@@ -152,6 +149,7 @@
 
 <style>
 	.board {
+		view-transition-name: board;
 		position: sticky;
 		z-index: var(--ss-z-bar);
 		bottom: 0;

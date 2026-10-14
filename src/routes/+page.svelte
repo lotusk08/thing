@@ -8,7 +8,7 @@
 	import '../app.css';
 	import { modeIcon } from 'ss/icons';
 	import { initMode, toggleMode } from 'ss/mode';
-	import { onMount, tick } from 'svelte';
+	import { onMount } from 'svelte';
 	import DecisionHeader from '$lib/components/DecisionHeader.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import ModelPanel from '$lib/components/ModelPanel.svelte';
@@ -16,6 +16,7 @@
 	import Scoreboard from '$lib/components/Scoreboard.svelte';
 	import Wordmark from '$lib/components/Wordmark.svelte';
 	import { store } from '$lib/state.svelte';
+	import { switchModel } from '$lib/switch';
 
 	onMount(() => {
 		initMode();
@@ -29,11 +30,9 @@
 	}
 
 	async function jump(modelId: string) {
-		store.active = modelId;
-		await tick();
+		await switchModel(modelId);
 		const panel = document.getElementById(`panel-${modelId}`);
 		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-		document.getElementById(`tab-${modelId}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 		panel?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
 		panel?.focus({ preventScroll: true });
 	}
@@ -52,6 +51,7 @@
 			</button>
 			<span class="ss-dot"></span>
 			<button class="ss-mode" type="button" aria-label="Switch light and dark" onclick={toggleMode}>
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -- SS's own SVG, never user input -->
 				{@html modeIcon('mode-clip')}
 			</button>
 		</div>

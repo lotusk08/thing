@@ -36,9 +36,13 @@ The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotus
   - `.ss-chip` for options and `.ss-segment` for the model tabs and choices of up to three states; larger choices use a menu.
   - `.ss-input` underlines, `.ss-check`, `.ss-btn`, and `.ss-note` for each model's estimate (tip/info/warning for high/medium/low confidence).
   - `.ss-swap` for the scoreboard toggle and the copy button (copy turns to a check), `.ss-tip`, `.ss-toast` and `.ss-dot`.
-  - SS line icons.
+  - SS line icons, and its solid note icons on the estimates.
 - **Layout:** hairlines instead of cards.
-- **Motion:** the header rises once on load (`.ss-enter`), and the scoreboard table opens in place (`.ss-move.tall`). Hovers are the one SS motion and sit under `(hover: hover)`. Everything that moves stops under reduced motion.
+- **Motion:**
+  - The header rises once on load (`.ss-enter`), and the scoreboard table opens in place (`.ss-move.tall`).
+  - Switching models: the tabs' highlight is one pill that slides to the new tab (`--ss-dur-small`, `--ss-ease-out`). The panel fades through, as a View Transition (`src/lib/switch.ts`): the old one out over `--ss-dur-micro`, the new one in over `--ss-dur-enter`. Without View Transitions it switches at once.
+  - Hovers are the one SS motion and sit under `(hover: hover)`.
+  - Under reduced motion nothing moves: the pill jumps, and only the panel's fade remains.
 - **Mode:** follows the system. A choice of the other mode is kept in `localStorage`, as SS does.
 - **Contrast:** SS's faint ink (`--ss-tx-3`, 3.2:1) is only used for placeholders and marks. Hints, labels and captions use `--ss-tx-2` so they clear WCAG AA.
 
@@ -49,6 +53,7 @@ npm install
 npm run dev       # http://localhost:5173 (fetches the title font first)
 npm test          # vitest: every compute(), schema, scoreboard, markdown
 npm run check     # svelte-check, strict TS
+npm run lint      # ESLint (type-checked TS and Svelte) and knip (unused files, exports, dependencies)
 npm run build     # static site in build/, title font included (deploy to any static host)
 npm run preview
 ```
@@ -189,6 +194,7 @@ Guidelines:
 ## Quality
 
 - `npm run check`: 0 errors, 0 warnings (strict, `noUncheckedIndexedAccess`).
+- `npm run lint`: ESLint and knip clean.
 - `npm test`: 57 tests across 9 files.
 - Lighthouse (mobile, production build): Performance 98, Accessibility 100, Best Practices 100, SEO 100.
 - axe: no violations on any model, in light and dark, with inputs filled and the scoreboard open.

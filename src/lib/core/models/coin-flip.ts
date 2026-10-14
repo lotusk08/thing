@@ -2,13 +2,13 @@ import { bumpConfidence, confidenceFromMargin, defineModel, leanOf, marginOf, ra
 import { field } from '../schema';
 import { optionLabel, pairs, sum } from '../util';
 
-export const REACTIONS = [
+const REACTIONS = [
 	{ value: 'relieved', label: 'Relieved' },
 	{ value: 'neutral', label: 'Neutral' },
 	{ value: 'disappointed', label: 'Disappointed' }
 ] as const;
 
-export const MIN_FLIPS = 3;
+const MIN_FLIPS = 3;
 
 export const coinFlip = defineModel({
 	id: 'coin-flip',
@@ -21,9 +21,9 @@ export const coinFlip = defineModel({
 			'flips',
 			'Flips',
 			[
-				field.hidden('heads', '' as string),
-				field.hidden('tails', '' as string),
-				field.hidden('landed', '' as string),
+				field.hidden('heads', ''),
+				field.hidden('tails', ''),
+				field.hidden('landed', ''),
 				field.choice('reaction', 'Your gut reaction', REACTIONS, { default: '' })
 			],
 			{

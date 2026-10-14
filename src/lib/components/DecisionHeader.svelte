@@ -176,19 +176,6 @@
 
 	.remove {
 		border-radius: var(--ss-radius-full);
-		color: var(--ss-icon);
-		transition: color var(--ss-dur-hover) var(--ss-ease-hover);
-	}
-
-	@media (hover: hover) {
-		.remove:hover:not(:disabled) {
-			color: var(--ss-danger);
-		}
-	}
-
-	.remove:active:not(:disabled) {
-		color: var(--ss-danger);
-		transition-duration: 0s;
 	}
 
 	.add-option {

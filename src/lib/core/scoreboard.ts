@@ -2,7 +2,7 @@ import { leanOf, marginOf, ranked, TIE, type AnyModel } from './model';
 import type { Confidence, Decision, Estimate, ModelId, Option, OptionId } from './types';
 import { mean, optionLabel } from './util';
 
-export interface Cell {
+interface Cell {
 	model: AnyModel;
 	/** 0–100, or null when the model isn't filled in yet. */
 	value: number | null;
@@ -10,7 +10,7 @@ export interface Cell {
 	isLean: boolean;
 }
 
-export interface Row {
+interface Row {
 	option: Option;
 	label: string;
 	cells: Cell[];
@@ -18,7 +18,7 @@ export interface Row {
 	isLeader: boolean;
 }
 
-export interface Verdict {
+interface Verdict {
 	leader?: OptionId;
 	/** Options sharing the top average when there is no single leader. */
 	tied: OptionId[];

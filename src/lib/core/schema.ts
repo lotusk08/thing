@@ -34,7 +34,7 @@ export interface TextField<K extends string = string> extends Base<K> {
 	multiline?: boolean;
 }
 
-export interface Choice<V extends string = string> {
+interface Choice<V extends string = string> {
 	value: V;
 	label: string;
 }
@@ -69,7 +69,7 @@ export interface PerOptionField<K extends string = string, C extends Fields = Fi
 	fields: C;
 }
 
-export interface ListContext<C extends Fields = Fields> {
+interface ListContext<C extends Fields = Fields> {
 	decision: Decision;
 	items: readonly Item<C>[];
 	random: () => number;
@@ -106,7 +106,7 @@ export type Item<C extends Fields> = { id: string } & Values<C>;
 
 export type Values<C extends Fields> = { -readonly [F in C[number] as F['key']]: ValueOf<F> };
 
-export type ValueOf<F> =
+type ValueOf<F> =
 	F extends NumberField<string> ? number
 	: F extends TextField<string> ? string
 	: F extends ChoiceField<string, infer V> ? V | ''

@@ -19,7 +19,7 @@ interface Saved {
 	active: ModelId;
 }
 
-const defaults = (m: AnyModel, d: Decision) => normalizeInputs(m.inputsSchema, undefined, d) as Inputs;
+const defaults = (m: AnyModel, d: Decision) => normalizeInputs(m.inputsSchema, undefined, d);
 
 function fresh(): Saved {
 	const decision = newDecision();
@@ -41,7 +41,7 @@ function load(): Saved {
 		return {
 			decision,
 			inputs: Object.fromEntries(
-				models.map((m) => [m.id, normalizeInputs(m.inputsSchema, inputs[m.id], decision) as Inputs])
+				models.map((m) => [m.id, normalizeInputs(m.inputsSchema, inputs[m.id], decision)])
 			),
 			touched: Object.fromEntries(models.map((m) => [m.id, touched[m.id] === true])),
 			active: models.find((m) => m.id === raw.active)?.id ?? models[0]!.id
@@ -139,7 +139,7 @@ class DecisionStore {
 	/** Re-shape every model's inputs after options change (adds per-option entries, drops stale ones). */
 	#syncInputs() {
 		const d = $state.snapshot(this.decision);
-		for (const m of models) this.inputs[m.id] = normalizeInputs(m.inputsSchema, $state.snapshot(this.inputs[m.id]), d) as Inputs;
+		for (const m of models) this.inputs[m.id] = normalizeInputs(m.inputsSchema, $state.snapshot(this.inputs[m.id]), d);
 	}
 }
 

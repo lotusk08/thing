@@ -42,15 +42,12 @@
 	{#if items.length}
 		<ol>
 			{#each items as item, i (item.id)}
+				{@const title = field.itemTitle?.(item, i, decision)}
 				<li data-item={item.id}>
 					<span class="n ss-figure" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
 					<div class="body">
 						<div class="head">
-							{#if field.itemTitle}
-								<p class="title">{field.itemTitle(item, i, decision)}</p>
-							{:else}
-								<p class="title sr-only">{field.itemLabel} {i + 1}</p>
-							{/if}
+							<p class="title" class:sr-only={title === undefined}>{title ?? `${field.itemLabel} ${i + 1}`}</p>
 							<button type="button" class="ss-btn ghost icon small remove" aria-label="Remove {noun} {i + 1}" onclick={() => remove(i)}>
 								<Icon name="close" />
 							</button>
@@ -129,19 +126,6 @@
 
 	.remove {
 		margin-left: auto;
-		color: var(--ss-icon);
-		transition: color var(--ss-dur-hover) var(--ss-ease-hover);
-	}
-
-	@media (hover: hover) {
-		.remove:hover {
-			color: var(--ss-danger);
-		}
-	}
-
-	.remove:active {
-		color: var(--ss-danger);
-		transition-duration: 0s;
 	}
 
 	.add {

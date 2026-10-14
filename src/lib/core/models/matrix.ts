@@ -2,7 +2,7 @@ import { confidenceFromMargin, defineModel, leanOf, marginOf, minConfidence, sco
 import { field } from '../schema';
 import { optionLabel, sum } from '../util';
 
-export const MIN_CRITERIA = 3;
+const MIN_CRITERIA = 3;
 
 export const matrix = defineModel({
 	id: 'matrix',

@@ -6,11 +6,17 @@
 -->
 <script lang="ts">
 	import { choicesOf, type Fields } from '$lib/core/schema';
-	import type { Decision } from '$lib/core/types';
+	import type { Decision, OptionId } from '$lib/core/types';
 	import { optionLabel } from '$lib/core/util';
 	import Self from './Fields.svelte';
 	import ListInput from './ListInput.svelte';
 
+	/**
+	 * Each branch below binds the kind of value its field declares, which a key
+	 * only known at run time can't tell TypeScript: hence `any`, read as the
+	 * field's type wherever it is shown.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	type Bag = Record<string, any>;
 
 	interface Props {
@@ -37,7 +43,7 @@
 			<div class="ss-field number">
 				<div class="label-row">
 					<label for={id}>{f.label}</label>
-					<output class="ss-figure" for={id}>{show(value[f.key], f.signed)}</output>
+					<output class="ss-figure" for={id}>{show(value[f.key] as number, f.signed)}</output>
 				</div>
 				<input
 					type="range"
@@ -47,7 +53,7 @@
 					step={f.step ?? 1}
 					bind:value={value[f.key]}
 					aria-describedby={helpId}
-					aria-valuetext={f.ends ? `${show(value[f.key], f.signed)} (${f.ends[0]} ${show(f.min, f.signed)} to ${f.ends[1]} ${show(f.max, f.signed)})` : undefined}
+					aria-valuetext={f.ends ? `${show(value[f.key] as number, f.signed)} (${f.ends[0]} ${show(f.min, f.signed)} to ${f.ends[1]} ${show(f.max, f.signed)})` : undefined}
 				/>
 				{#if f.ends && !inline}
 					<div class="ends" aria-hidden="true"><span>{f.ends[0]}</span><span>{f.ends[1]}</span></div>
@@ -119,11 +125,12 @@
 				<Self fields={f.fields} bind:value={value[f.key]} {decision} idPrefix={id} />
 			</fieldset>
 		{:else if f.kind === 'perOption'}
+			{@const byOption = value[f.key] as Record<OptionId, Bag>}
 			<div class="per-option">
 				{#each decision.options as o (o.id)}
 					<fieldset class="option">
 						<legend>{optionLabel(decision, o.id)}</legend>
-						<Self fields={f.fields} bind:value={value[f.key][o.id]} {decision} idPrefix={`${id}-${o.id}`} />
+						<Self fields={f.fields} bind:value={byOption[o.id]!} {decision} idPrefix={`${id}-${o.id}`} />
 					</fieldset>
 				{/each}
 			</div>

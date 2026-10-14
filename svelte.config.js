@@ -6,7 +6,7 @@ const config = {
 	preprocess: vitePreprocess(),
 	compilerOptions: { runes: true },
 	kit: {
-		adapter: adapter({ fallback: undefined, strict: true })
+		adapter: adapter()
 	}
 };
 

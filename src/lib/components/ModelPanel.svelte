@@ -1,15 +1,11 @@
 <script lang="ts">
 	import type { AnyModel } from '$lib/core/model';
-	import type { Confidence } from '$lib/core/types';
+	import { NOTES } from '$lib/icons';
 	import { store } from '$lib/state.svelte';
 	import Fields from './fields/Fields.svelte';
-	import { noteIcons } from '$lib/icons';
 	import Icon from './Icon.svelte';
 
 	let { model }: { model: AnyModel } = $props();
-
-	/** Status uses SS's note families. */
-	const NOTE = { high: 'tip', medium: 'info', low: 'warning' } as const satisfies Record<Confidence, string>;
 
 	const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 	const estimate = $derived(store.estimates[model.id]);
@@ -33,9 +29,10 @@
 	</header>
 
 	{#if estimate}
-		<div class="ss-note {NOTE[estimate.confidence]} estimate">
+		{@const note = NOTES[estimate.confidence]}
+		<div class="ss-note {note.type} estimate">
 			<p><span class="confidence">{cap(estimate.confidence)} confidence.</span> {estimate.summary}</p>
-			{@html noteIcons[NOTE[estimate.confidence]]}
+			<span class="ss-note-icon" aria-hidden="true"><Icon name={note.icon} /></span>
 		</div>
 	{:else}
 		<p class="estimate empty">No estimate yet. Fill in the inputs below.</p>
@@ -54,6 +51,7 @@
 
 <style>
 	.panel {
+		view-transition-name: panel;
 		display: grid;
 		gap: var(--ss-space-6);
 		padding-block: var(--ss-space-6) var(--ss-section-s);
