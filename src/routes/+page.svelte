@@ -15,7 +15,6 @@
 	import ModelPanel from '$lib/components/ModelPanel.svelte';
 	import ModelTabs from '$lib/components/ModelTabs.svelte';
 	import Scoreboard from '$lib/components/Scoreboard.svelte';
-	import ViewSwitch from '$lib/components/ViewSwitch.svelte';
 	import Wordmark from '$lib/components/Wordmark.svelte';
 	import { store } from '$lib/state.svelte';
 	import { switchModel } from '$lib/switch';
@@ -61,11 +60,10 @@
 
 	<main class="wrap">
 		<DecisionHeader />
-		<ViewSwitch />
+		<ModelTabs />
 		{#if store.view === 'map'}
 			<DecisionMap />
 		{:else}
-			<ModelTabs />
 			{#key store.active}
 				<ModelPanel model={store.activeModel} />
 			{/key}

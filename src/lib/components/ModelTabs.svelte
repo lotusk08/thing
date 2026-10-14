@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { store } from '$lib/state.svelte';
-	import { switchModel } from '$lib/switch';
+	import { switchModel, switchView } from '$lib/switch';
+	import Icon from './Icon.svelte';
+
+	// The first tab is the decision map; the rest are the models.
+	const MAP = 'map';
+	const current = $derived(store.view === 'map' ? MAP : store.active);
+	const ids = $derived([MAP, ...store.models.map((m) => m.id)]);
 
 	let list: HTMLElement;
 
@@ -31,13 +37,13 @@
 
 	// Again whenever the selection moves or a tab's width changes (its "filled" dot);
 	// a new selection, from a tab or the scoreboard, is also brought into view.
-	let shown = store.active;
+	let shown = store.view === 'map' ? MAP : store.active;
 	$effect(() => {
-		const active = store.active;
+		const now = current;
 		void store.models.map((m) => store.estimates[m.id] !== null);
 		const tab = measure();
-		if (!tab || active === shown) return;
-		shown = active;
+		if (!tab || now === shown) return;
+		shown = now;
 		reveal(tab);
 	});
 
@@ -50,16 +56,16 @@
 	});
 
 	function select(id: string, focus = false) {
-		void switchModel(id);
+		void (id === MAP ? switchView('map') : switchModel(id));
 		if (focus) list.querySelector<HTMLElement>(`#tab-${id}`)?.focus();
 	}
 
 	function onkeydown(e: KeyboardEvent, i: number) {
-		const n = store.models.length;
+		const n = ids.length;
 		const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: n - 1 }[e.key];
 		if (next === undefined) return;
 		e.preventDefault();
-		select(store.models[(next + n) % n]!.id, true);
+		select(ids[(next + n) % n]!, true);
 	}
 </script>
 
@@ -69,13 +75,28 @@
 		class:measured
 		class:ready
 		role="tablist"
-		aria-label="Decision models"
+		aria-label="Map and models"
 		style:--x="{x}px"
 		style:--w="{w}px"
 		bind:this={list}
 	>
+		<button
+			type="button"
+			role="tab"
+			id="tab-{MAP}"
+			class="map"
+			title="Map"
+			aria-label="Map"
+			aria-selected={current === MAP}
+			aria-controls={current === MAP ? `panel-${MAP}` : undefined}
+			tabindex={current === MAP ? 0 : -1}
+			onclick={() => select(MAP)}
+			onkeydown={(e) => onkeydown(e, 0)}
+		>
+			<Icon name="mindmap" />
+		</button>
 		{#each store.models as m, i (m.id)}
-			{@const selected = m.id === store.active}
+			{@const selected = m.id === current}
 			<button
 				type="button"
 				role="tab"
@@ -85,7 +106,7 @@
 				aria-controls={selected ? `panel-${m.id}` : undefined}
 				tabindex={selected ? 0 : -1}
 				onclick={() => select(m.id)}
-				onkeydown={(e) => onkeydown(e, i)}
+				onkeydown={(e) => onkeydown(e, i + 1)}
 			>
 				{m.short}
 				{#if store.estimates[m.id]}
@@ -145,6 +166,13 @@
 		position: relative;
 		flex: none;
 		white-space: nowrap;
+	}
+
+	/* The map's tab is its icon alone, at the size of the tabs' text. */
+	.ss-segment .map {
+		min-width: 0;
+		padding-inline: 10px;
+		font-size: var(--ss-text-sm);
 	}
 
 	.ss-segment button[aria-selected='true'] {

@@ -89,10 +89,10 @@
 	</button>
 {/snippet}
 
-<section class="map" aria-labelledby="map-title" bind:this={root}>
+<div id="panel-map" class="map" role="tabpanel" aria-labelledby="tab-map" tabindex="-1" bind:this={root}>
 	<header class="root">
 		<!-- The decision's own title is right above, in the header. -->
-		<h2 id="map-title" class="sr-only">Map of {title || 'the decision'}</h2>
+		<h2 class="sr-only">Map of {title || 'the decision'}</h2>
 		{#each map.notes as note (`${note.model}/${note.field.key}`)}
 			<button type="button" class="note" onclick={() => (sheet = { kind: 'note', note })}>
 				<span class="ss-label">{note.field.label}</span>
@@ -140,13 +140,14 @@
 			<path d={line.d} class:hot={hot === line.item || hot === line.option} />
 		{/each}
 	</svg>
-</section>
+</div>
 
 <MapSheet bind:edit={sheet} />
 
 <style>
 	.map {
 		view-transition-name: map;
+		outline: none;
 		position: relative;
 		display: grid;
 		gap: var(--ss-space-8);

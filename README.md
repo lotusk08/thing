@@ -17,7 +17,7 @@ Each model also reports a **lean** (its pick, if there's no tie), a **confidence
 
 The **verdict** names the option with the highest average across filled models and how many models agree with it. Confidence is high when 3+ models are filled, ≥75% agree, and the lead is ≥10 points. It is medium with 2+ models, ≥50% agreement, and a lead ≥5. Otherwise it is low. **Copy Markdown** exports the table, the verdict, and each model's summary.
 
-The **map** (the Models / Map switch) lays out what the models hold around the options:
+The **map** (the first tab, its icon alone, before the models) lays out what the models hold around the options:
 
 - Fishbone's problem sits at the top.
 - Items that span options sit in a band, with a line to each option they link to, such as a cause and the options that resolve it. A cause no option resolves is dashed and says so.
@@ -43,7 +43,7 @@ The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotus
   - If neither works, the build warns and uses Newsreader italic, the SS fallback.
 - **Components** (used as SS ships them):
   - `.ss-topbar` and the `.ss-mode` disc that turns into a crescent (`modeIcon()`, `initMode`/`toggleMode`).
-  - `.ss-chip` for options and `.ss-segment` for the Models / Map switch, the model tabs and choices of up to three states; larger choices use a menu.
+  - `.ss-chip` for options and `.ss-segment` for the tabs (the map, then the models) and choices of up to three states; larger choices use a menu.
   - `.ss-input` underlines, `.ss-check`, `.ss-btn`, and `.ss-note` for each model's estimate (tip/info/warning for high/medium/low confidence).
   - `.ss-swap` for the scoreboard toggle and the copy button (copy turns to a check), `.ss-tip`, `.ss-toast` and `.ss-dot`.
   - The map's sheet is a `<dialog class="ss-pop ss-move up">` (it rises and blurs the page behind), with an `.ss-menu` of what to add.
@@ -52,7 +52,7 @@ The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotus
 - **Motion:**
   - The header rises once on load (`.ss-enter`), and the scoreboard table opens in place (`.ss-move.tall`).
   - Switching models: the tabs' highlight is one pill that slides to the new tab (`--ss-dur-small`, `--ss-ease-out`). The panel fades through, as a View Transition (`src/lib/switch.ts`): the old one out over `--ss-dur-micro`, the new one in over `--ss-dur-enter`. Without View Transitions it switches at once.
-  - Switching between Models and Map is the same transition: what leaves fades out and what arrives fades in, each where it stands, so nothing slides.
+  - Opening the map is the same: the pill slides to the map's tab, the panel fades out and the map fades in where it stands, so nothing slides.
   - Hovers are the one SS motion and sit under `(hover: hover)`.
   - Under reduced motion nothing moves: the pill jumps, the sheet only fades, and only the fades between screens remain.
 - **Mode:** follows the system. A choice of the other mode is kept in `localStorage`, as SS does.
@@ -96,7 +96,7 @@ src/
     state.svelte.ts            $state / $derived store, localStorage persistence via $effect
     switch.ts                  switchModel() / switchView(): every switch is one View Transition
     icons.ts                   the SS icons used, from its single-file SVGs
-    components/                thin UI on SS classes: header, view switch, tabs, panel, map, sheet, scoreboard
+    components/                thin UI on SS classes: header, tabs, panel, map, sheet, scoreboard
       fields/Fields.svelte     renders ANY inputsSchema (recursive)
       fields/ListInput.svelte
     core/                      plain TS, no Svelte imports
