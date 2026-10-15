@@ -44,7 +44,7 @@ The **map** switch, the first segment of the tab pill, shows each model's map in
 
 ## Design
 
-The UI is built on **SS, Steve's Style** ([lotusk08/ss](https://github.com/lotusk08/ss), installed as the `ss` package). It uses SS's own tokens, fonts, icons and components and adds no palette of its own.
+The UI is built on **SS, Simple Style** ([lotusk08/ss](https://github.com/lotusk08/ss), installed as the `ss` package). It uses SS's own tokens, fonts, icons and components and adds no palette of its own.
 
 - **Surface:** Desk, the SS default for working tools: near-white or near-black ground with near-black or near-white ink. There is one accent, blue by day and ember by night, and it marks what you can act on.
 - **Charts:** each option has its own SS hue (`.opt-0` … `.opt-4` in `src/app.css`): A the accent, B the other accent (ember by day, blue by night), so two options are always blue against ember, then purple, green and red. Each also has its own dash, so they read apart without colour. The matrix's cells are a flat wash of their option's colour, as strong as the score. What belongs to no option (the risk grid, the fishbone's bones, the scoreboard's meters) takes the accent from light to bold: `--ramp-1` (a wash) to `--ramp-5` (the accent), and `--rise` for a bar. Fills are light washes: shapes faint at the middle and fuller at the edge, the 10-10-10 areas faint at zero. Lines are hairlines. The hats keep their own colours as swatches, since those name the hats.

@@ -24,7 +24,7 @@ Deploys as the Cloudflare Worker `thing` on `thing.stevehoang.com` (`wrangler.js
 - Styles more than one component uses (segment buttons, the remove button, the option colours and badges, the chart ramp, the wheel's size) live in `src/app.css`.
 - No runtime dependencies beyond `ss` (bundled at build): no UI component or chart libraries, no network calls. Dev-only: `opentype.js`, `wawoff2` and `@resvg/resvg-js` for `npm run logo`; ESLint and knip for `npm run lint`.
 - Mobile-first (380px), light/dark via `prefers-color-scheme`, native controls, visible focus.
-- The UI follows SS, Steve's Style (the `ss` package, github:lotusk08/ss). Read `node_modules/ss/README.md` and `node_modules/ss/skills/ss/SKILL.md` before UI work.
+- The UI follows SS, Simple Style (the `ss` package, github:lotusk08/ss). Read `node_modules/ss/README.md` and `node_modules/ss/skills/ss/SKILL.md` before UI work.
   - Use SS roles and tokens (`--ss-*`), never raw colours, and use its components (`.ss-btn`, `.ss-input`, `.ss-segment`, `.ss-note`, `.ss-swap`, …) unchanged.
   - Hover rules go under `(hover: hover)` on `--ss-dur-hover`/`--ss-ease-hover`. Things that come and go use `.ss-move`.
   - Readable text uses `--ss-tx-2` or stronger (WCAG AA). `--ss-tx-3` is only for placeholders and marks.
